@@ -83,7 +83,9 @@ in http caching (presuming servers send the correct headers). HTTP should defer 
 possible to browsers, and should provide logical hooks for developers to manage caching and headers
 themselves.
 
-Composable, Flat API Surface HTTP may be accompanied by other libraries that provide features like
+Composable, Flat API Surface
+
+HTTP may be accompanied by other libraries that provide features like
 caching, data serialization, transformation, and validation. These tools should be used by
 developers in conjunction with the HTTP library, and the HTTP library should not know or care how
 they’re being used. In other words, HTTP can’t be configured to automatically leverage these tools
@@ -103,7 +105,9 @@ party Connection implementations conform to the expected API.
 
  * XHRConnection JSONPConnection NodeConnection MockConnection
 
-### Connection Connections are constructed with a single argument, a `ConnectionConfig` object.
+### Connection
+
+Connections are constructed with a single argument, a `ConnectionConfig` object.
 
 Using a callable function “create” instead of instantiating connections via “new” keyword enables
 using the connection builder in part of a functional chain without having to wrap the instantiation
@@ -150,7 +154,9 @@ provided `ConnectionConfig` object.
 
 ### Annotations
 
-### Types #### `ConnectionConfig` Interface
+### Types
+
+#### `ConnectionConfig` Interface
 
 #### `BaseConnectionConfig` Class
 
@@ -169,19 +175,25 @@ such as at the App Component level.
 
 #### Testing with MockConnection
 
-```javascript describe(‘MyComponent’, function() {   beforeEach(function() {
+```javascript
+describe(‘MyComponent’, function() {
+  beforeEach(function() {
 
-  }); }); ```
+  });
+});
+```
 
 ### Performance Considerations
 
- * Connections in separate modules, load what you need. Abortable requests. Optionally cold
- * connections.
+ * Connections in separate modules, load what you need.
+ * Abortable requests.
+ * Optionally cold connections.
 
 ### Accessibility Considerations
 
-### User Experience Considerations More insight into connection state to provide realtime status to
-users.
+### User Experience Considerations
+
+More insight into connection state to provide realtime status to users.
 
 ### Mobile Considerations
 
