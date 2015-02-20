@@ -2,6 +2,11 @@
 
 _friend of the web since ‘91_
 
+## Authors
+
+By Jeff Cross with much input from Caitlin Potter, Ben Lesh, Igor Minar, and other Angular team
+members.
+
 ## Overview
 
 Apps need a way to retrieve and change and assets from other places. Http is one of many reasonable
@@ -93,36 +98,58 @@ as part of a request/response lifecycle, though developers may define their own 
 make certain processes seamless. Consequently, it’s up to developers to first fetch from a
 proprietary cache before requesting from HTTP, if not relying on implicit browser cache mechanisms.
 
+
+
 ## Proposed Design
 
-The primary building block of the HTTP implementation is a Connection. A Connection instance
-represents a single request and response, implements the Observable interface. Connections may be
-created by constructing with the “new” keyword, or calling the “create” method of a
-ConnectionBuilder class.
+The primary building block of the HTTP implementation is a `Connection`. A `Connection` instance
+represents a single request and response, implements the `Observable` interface. Connections may be
+created by constructing with the `new` keyword, or calling the static `create` method of a
+`Connection` class.
+
+Here is a simple example of loading a repository from Github's API:
+
+```javascript
+import {XHRConnection} from 'http/XHR';
+
+class MyComponent {
+  @Inject(XHRConnection);
+  constructor(XHR:XHRConnection) {
+    XHR
+      .create({url: 'https://api.github.com/repos/angular/angular.js'})
+      .subscribe(function(res) {
+        console.log(res.body);
+      });
+  }
+}
+```
 
 The HTTP will include the following Connection types, and will provide an interface to ensure third-
 party Connection implementations conform to the expected API.
 
- * XHRConnection JSONPConnection NodeConnection MockConnection
+ * XHRConnection
+ * JSONPConnection
+ * NodeConnection
+ * MockConnection
 
 ### Connection
 
 Connections are constructed with a single argument, a `ConnectionConfig` object.
 
-Using a callable function “create” instead of instantiating connections via “new” keyword enables
-using the connection builder in part of a functional chain without having to wrap the instantiation
-in a closure. A Connection implementation may choose to be instantiable with the “new” keyword.
+Using a callable function "create" instead of instantiating connections via "new" keyword enables
+creating connections in part of a functional chain without having to wrap the instantiation in a
+closure. A `Connection` implementation may be instantiable with the "new" keyword.
 
 ### `ConnectionConfig`
 
 Connections implement the Observable interface, with the returned observable representing the
 response. The `ConnectionConfig` can pass in optional observers to observe connection properties
-“state”, and “uploadProgress”. The “progress” event of requests can be used to trigger calls to
-onNext of the Connection Observer by setting the getProgressively property of the `ConnectionConfig`
+"state", and "uploadProgress". The "progress" event of requests can be used to trigger calls to
+onNext of the Connection Observer by setting the `getProgressively` property of the `ConnectionConfig`
 to true
 
-If the `ConnectionConfig` object contains has a property “getProgressively” with a value of “true,”
-and the responseType is set to “text” or empty string, the observable sequence must be pushed to on
+If the `ConnectionConfig` object contains has a property `getProgressively` with a value of "true,"
+and the responseType is set to "text" or empty string, the observable sequence must be pushed to on
 every request progress event, and must contain the full available response text. When the request
 completes, the connection’s observer onComplete function should be called if present
 
@@ -144,34 +171,60 @@ the provided base, it is encouraged as a best practice to create an injectable c
 the base config that can be shared across the app, and further copied for with Connection-instance-
 specific properties.
 
-Adventurous users could override the `BaseConnectionConfig` in the top-level application component
-using  dependency injection, by binding a mutated `ConnectionConfig` to the `BaseConnectionConfig`
-token.
+The `BaseConnectionConfig` could also be replaced with a custom implementation in the Injector
+during application bootstrap by creating a new binding.
+
+```javascript
+import {bootstrap} from 'angular2/angular2';
+import {bind} from 'angular2/di';
+import {MyAppConfig, MyAppComponent} from 'myapp';
+import {BaseConnectionConfig} from 'http';
+
+bootstrap(MyAppComponent, [
+  bind(BaseConnectionConfig).toValue(MyAppConfig);
+]);
+
+```
 
 Passed-in `ConnectionConfig` objects should be merged with the `BaseConnectionConfig` when creating
-the Connection. Values from the `BaseConnectionConfig` object should replace undefined values in the
-provided `ConnectionConfig` object.
+the `Connection`. Values from the `BaseConnectionConfig` object should replace undefined values in the
+provided `ConnectionConfig` object. A `Connection` should throw an exception if the provided config
+does not contain necessary values to execute a request.
 
 ### Annotations
 
 ### Types
 
+#### `Connection` Interface
+
 #### `ConnectionConfig` Interface
 
 #### `BaseConnectionConfig` Class
 
-
+#### `Response` Interface
 
 #### Observable Interface
 
-This will be a minimal subset of the RxJS Observable interface [found
-here](https://github.com/borisyankov/DefinitelyTyped/blob/master/rx/rx.d.ts#L28). Connections should
-all be able to upgrade to a compatible Observable interface if provided via injection into the
-ConnectionBuilder class. This would be accomplished by binding the compatible Observable class to
-the Observable token provided by the HTTP module prior to the ConnectionBuilder being instantiated,
-such as at the App Component level.
+This will be a minimal subset of the RxJS `Observable` interface [found here](https://github.com/bor
+isyankov/DefinitelyTyped/blob/8fea426543e19e19db32eb827a02d11bdab30383/rx/rx-lite.d.ts#L217).
+Connections should all be able to upgrade to a compatible `Observable` interface if provided via
+injection into the `Connection` class. This would be accomplished by binding the compatible
+`Observable` class to the `Observable` token provided by the HTTP library prior to the `Connection`
+being instantiated, such as at the `App Component` level or in the config passed to `bootstrap`.
+
+```javascript
+import {bind} from 'angular2/di';
+import {bootstrap} from 'angular2/angular2';
+
+boostrap(AppComponent, [
+  bind(Observable).toValue(Rx.Observable)
+]);
+
+```
 
 #### IDisposable Interface
+
+[found here](https://github.com/borisyankov/DefinitelyTyped/blob/8fea426543e19e19db32eb827a02d11bdab30383/rx/rx-lite.d.ts#L66)
 
 #### Testing with MockConnection
 
@@ -234,7 +287,7 @@ annotations? @Connection(JSONP))
 
 Use cases:
   * Append a session token to url for all requests to a certain host
-  * Flatten a response from a single request, ie response “{data: []}” -> “[]”
+  * Flatten a response from a single request, ie response "{data: []}" -> "[]"
 
 
 (If using observable idioms, old way of an array of functions with same signature will not work
@@ -253,7 +306,20 @@ Use cases:
 
 ### Integration with Router Pipeline
 
+### Integration with Templates
+
+### Integration with Change Detection
+
 ### Making Requests within Observable Chain
 
-### Bridging Request to ES6 Promise Uploading a File Composing with EventSource Pre-Fetching Data
+### Bridging Request to ES6 Promise
+
+### Incorporating into a Promise Chain
+
+### Uploading a File
+
+### Composing with EventSource
+
+### Pre-Fetching Data
+
 ### with Annotation+Router Single Callback and Continuous Callback
