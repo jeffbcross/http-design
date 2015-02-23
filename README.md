@@ -1,38 +1,42 @@
-# HTTP
+# Http
 
 _friend of the web since ‘91_
 
 ## Authors
 
-By Jeff Cross with much input from Caitlin Potter, Ben Lesh, Igor Minar, and other Angular team
-members.
+By [Jeff Cross](https://github.com/jeffbcross) with much input from
+[Caitlin Potter](https://github.com/caitp), [Ben Lesh](https://github.com/blesh),
+[Igor Minar](https://github.com/igorminar), and other Angular team members. Jeff is the one
+responsible for bad ideas and errors.
 
 ## Overview
 
 Apps need a way to retrieve and change and assets from other places. Http is one of many reasonable
 ways to accomplish this, and the most widely-available option for data access in the wild world wide
-web. This doc is concerned with the http collection of modules that will be part of Angular2,
-heretofore referred to as HTTP.
+web. This doc is concerned with the Http collection of modules that will be part of Angular2,
+heretofore referred to as Http.
 
 The primary use cases for this library are:
   * Transactional data access, as opposed to continuous access provided by other means like
-    WebSockets and Server-Sent Eventse * Facilitating fetching and manipulating of remote application models
-  * Loading media into an applicatione * Uploadine  e files to servers
+    WebSockets and Server-Sent Events
+  * Facilitating fetching and manipulating of remote application models
+  * Loading media into an application
+  * Uploading files to servers
 
 ## Design Goals
 
 ### Simplicity
 
-The tools in the HTTP toolbelt should be easy to comprehend from the start, easy to comprehend when
+The tools in the Http toolbelt should be easy to comprehend from the start, easy to comprehend when
 implementing advanced use cases, and easy to comprehend when reviewing someone else’s code.
 
 ### Platform Flexibility
 
-HTTP should work as well in node.js as it works in a browser. In fact, it should be easy to make
+Http should work as well in node.js as it works in a browser. In fact, it should be easy to make
 work in any JavaScript environment that’s capable of http communication, with minimal work. It
 should also be possible to use multiple underlying mechanisms in a single platform, like using JSONP
 instead of XHR. And on a server, if an Angular2 app is being pre-rendered before being served,
-perhaps the underlying HTTP mechanism would actually be connecting to the local filesystem,
+perhaps the underlying Http mechanism would actually be connecting to the local filesystem,
 database, or cache, to allow the app to re-use code without making unnecessary network calls.
 
 ### Testability
@@ -42,14 +46,14 @@ in tests), and execute tests synchronously.
 
 ### Performance
 
-Inasmuch as is possible without introducing unreasonable magic or surprise to users, the HTTP lib
+Inasmuch as is possible without introducing unreasonable magic or surprise to users, the Http lib
 should be performance-conscious. Most of this will be accomplished by providing guidance or APIs to
 tune performance, such as request cancellation, caching of resources, etc.
 
 ### Security
 
 Since the library will target modern browsers, which have implemented many safeguards to prevent
-XSRF and JSON vulnerabilities, HTTP will focus on exposing primitives to allow developers to add
+XSRF and JSON vulnerabilities, Http will focus on exposing primitives to allow developers to add
 security measures required for their application. The documentation for the library should make note
 of what precautions users of the library should keep in mind to secure their applications.
 
@@ -61,62 +65,61 @@ rest of the framework. This may be the most appealing design goal, compared to o
 
 ### Love It or Leave It
 
-HTTP is focused on accomplishing the established goals, and may not be the right fit for all
-applications. So the rest of the core Angular2 framework should not give special treatment to HTTP,
+Http is focused on accomplishing the established goals, and may not be the right fit for all
+applications. So the rest of the core Angular2 framework should not give special treatment to Http,
 so that developers can easily use the http library of their choice. Perhaps other parts of a broader
-Angular2 data framework would be built with this HTTP implementation in mind, but it should be
+Angular2 data framework would be built with this Http implementation in mind, but it should be
 possible to bridge other http libraries.
 
 ## Design Anti-Goals
 
 ### Only Understand Response Types
 
-HTTP will not concern itself with the structure of data being sent or returned; it will only care
+Http will not concern itself with the structure of data being sent or returned; it will only care
 about the expected response type.
 
 ### Low Magic, Limited Scope
 
-It should always be clear what the HTTP library is doing from looking at calls in code, without
-worrying about how it has been configured somewhere else. HTTP should do as few things as possible,
+It should always be clear what the Http library is doing from looking at calls in code, without
+worrying about how it has been configured somewhere else. Http should do as few things as possible,
 and should not try to be too smart. Features like connection-retries should be made easy for
 developers to manage, but should not be an automatic, opt-out feature of the library.
 
 ### Don’t Reinvent Wheels
 
 Modern browsers have improved security features, increasingly improving caching ability, and baked-
-in http caching (presuming servers send the correct headers). HTTP should defer as much work as
+in http caching (presuming servers send the correct headers). Http should defer as much work as
 possible to browsers, and should provide logical hooks for developers to manage caching and headers
 themselves.
 
 Composable, Flat API Surface
 
-HTTP may be accompanied by other libraries that provide features like
+Http may be accompanied by other libraries that provide features like
 caching, data serialization, transformation, and validation. These tools should be used by
-developers in conjunction with the HTTP library, and the HTTP library should not know or care how
-they’re being used. In other words, HTTP can’t be configured to automatically leverage these tools
+developers in conjunction with the Http library, and the Http library should not know or care how
+they’re being used. In other words, Http can’t be configured to automatically leverage these tools
 as part of a request/response lifecycle, though developers may define their own wrapper functions to
 make certain processes seamless. Consequently, it’s up to developers to first fetch from a
-proprietary cache before requesting from HTTP, if not relying on implicit browser cache mechanisms.
+proprietary cache before requesting from Http, if not relying on implicit browser cache mechanisms.
 
 
 
 ## Proposed Design
 
-The primary building block of the HTTP implementation is a `Connection`. A `Connection` instance
-represents a single request and response, implements the `Observable` interface. Connections may be
-created by constructing with the `new` keyword, or calling the static `create` method of a
-`Connection` class.
+The primary building block of the Http implementation is a `Connection` object, which is created by
+calling the `http` factory function, or another factory of the application's choosing. A
+`Connection` instance represents a single request and response, and implements the `Observable`
+interface.
 
 Here is a simple example of loading a repository from Github's API:
 
 ```javascript
-import {XHRConnection} from 'http/XHR';
+import {Http} from 'http';
 
 class MyComponent {
-  @Inject(XHRConnection);
-  constructor(XHR:XHRConnection) {
-    XHR
-      .create({url: 'https://api.github.com/repos/angular/angular.js'})
+  @Inject(Http);
+  constructor(http:Http) {
+    http('https://api.github.com/repos/angular/angular.js')
       .subscribe(function(res) {
         console.log(res.body);
       });
@@ -124,29 +127,47 @@ class MyComponent {
 }
 ```
 
-The HTTP will include the following Connection types, and will provide an interface to ensure third-
-party Connection implementations conform to the expected API.
+The Http library will include the following `Connection` factories, and will provide an interface to
+ensure third-party `Connection` implementations conform to the expected API.
 
- * XHRConnection
- * JSONPConnection
- * NodeConnection
- * MockConnection
+ * Http
+ * HttpJsonp
+ * HttpNode
+ * HttpMock
+ * _HttpFetch_ TBD
 
 ### Connection
 
-Connections are constructed with a single argument, a `ConnectionConfig` object.
+Connections are constructed with a single argument, either a url string, or a `ConnectionConfig`
+object.
 
-Using a callable function "create" instead of instantiating connections via "new" keyword enables
-creating connections in part of a functional chain without having to wrap the instantiation in a
-closure. A `Connection` implementation may be instantiable with the "new" keyword.
+Using a callable function that accepts a single argument instead of instantiating connections via
+"new" keyword enables creating connections in part of a functional chain without having to wrap the
+instantiation in a closure. The requirement of using a factory function is only imposed on the
+officially-supported `Connection` factories. Other conforming implementations may instantiate
+Connections in whatever way suits the Connection, but the returned value should conform to the
+`Observable` interface.
 
 ### `ConnectionConfig`
 
-Connections implement the Observable interface, with the returned observable representing the
+Connections implement the `Observable` interface, with the returned observable representing the
 response. The `ConnectionConfig` can pass in optional observers to observe connection properties
 "state", and "uploadProgress". The "progress" event of requests can be used to trigger calls to
-onNext of the Connection Observer by setting the `getProgressively` property of the `ConnectionConfig`
-to true
+onNext of the Connection Observer by setting the `getProgressively` property of the
+`ConnectionConfig` to true.
+
+```javascript
+import {Http} from 'http';
+
+class MyComponent {
+  @Inject(Http);
+  constructor(http:Http) {
+    http({
+      url: 'https://'
+    })
+  }
+}
+```
 
 If the `ConnectionConfig` object contains has a property `getProgressively` with a value of "true,"
 and the responseType is set to "text" or empty string, the observable sequence must be pushed to on
@@ -203,13 +224,13 @@ does not contain necessary values to execute a request.
 
 #### `Response` Interface
 
-#### Observable Interface
+#### `Observable` Interface
 
 This will be a minimal subset of the RxJS `Observable` interface [found here](https://github.com/bor
 isyankov/DefinitelyTyped/blob/8fea426543e19e19db32eb827a02d11bdab30383/rx/rx-lite.d.ts#L217).
 Connections should all be able to upgrade to a compatible `Observable` interface if provided via
 injection into the `Connection` class. This would be accomplished by binding the compatible
-`Observable` class to the `Observable` token provided by the HTTP library prior to the `Connection`
+`Observable` class to the `Observable` token provided by the Http library prior to the `Connection`
 being instantiated, such as at the `App Component` level or in the config passed to `bootstrap`.
 
 ```javascript
@@ -238,28 +259,31 @@ describe(‘MyComponent’, function() {
 
 ### Performance Considerations
 
- * Connections in separate modules, load what you need.
- * Abortable requests.
- * Optionally cold connections.
+ * Connections in separate modules, load what you need
+ * Abortable requests
+ * Optionally cold connections
 
 ### Accessibility Considerations
 
-### User Experience Considerations
+### End User Experience Considerations
 
-More insight into connection state to provide realtime status to users.
+ * More insight into connection state to provide realtime status to users
+ * Better support of streaming data
+ * Better resilience in network flakes via `retry()`
+
 
 ### Mobile Considerations
 
 ### Caching
 
-The cache requirements are different for HTTP in Angular 2 vs $http in Angular 1, since there is a
+The cache requirements are different for Http in Angular 2 vs $http in Angular 1, since there is a
 separate fetching mechanism for template loading. In Angular 1, every request for a component’s
 template would make an http request that would try to grab the template from the $templateCache
 service before making a network request. And even though Angular 2 supports fetching of modules,
-which AngularJS 1 did not, these fetches will rely on ES6 System.import (or traceur equivalent), not
-the HTTP library.
+which AngularJS 1 did not, these fetches will rely on ES6 `System.import` (or traceur equivalent),
+not the Http library.
 
-So HTTP will not be depended on by the core framework, and only needs to meet the needs of end-users
+So Http will not be depended on by the core framework, and only needs to meet the needs of end-users
 (developers), and other data access libraries that will be part of angular 2.
 
 
@@ -273,9 +297,22 @@ annotations? @Connection(JSONP))
 
 ### Testability (Connection mocking)
 
+ * In-band response (no "respondWhen" declared before tests)
+ * Progressive response support
+
 ### Security
 
 ### Request/Response Transformation and Serialization
+
+Use cases:
+  * Append a session token to url for all requests to a certain host
+  * Flatten a response from a single request, ie response "{data: []}" -> "[]"
+
+
+(If using observable idioms, old way of an array of functions with same signature will not work)
+(since a function could not be certain the structure after other functions have transformed it)
+(Should requestTransforms and responseTransforms be part of the request config?)
+
 
 ### Authentication/Authorization
 
@@ -285,22 +322,22 @@ annotations? @Connection(JSONP))
 
 ### Request / Response Transformations
 
-Use cases:
-  * Append a session token to url for all requests to a certain host
-  * Flatten a response from a single request, ie response "{data: []}" -> "[]"
+### Serialization
 
+### Caching Responses and Reading from Cache
 
-(If using observable idioms, old way of an array of functions with same signature will not work
-(since a function could not be certain the structure after other functions have transformed it)
-(Should requestTransforms and responseTransforms be part of the request config? How are they
-(declared since there’s no base observable to attach to? Transducer-style? Are transducers
-(extensible enough?)
-
-### Serialization Caching Responses and Reading from Cache Connection Retry / Backoff
+### Connection Retry / Backoff
 
 (should be dynamic to not retry for specific auth codes, like 4xx)
 
 ### Synchronize to Local Database
+
+### Transforming Requests
+// Strip all headers if connection config contains arbitrary property
+// Adding an XSRF token to requests
+// Changing URLs
+
+### Fetching in ServiceWorker
 
 ### Authentication
 
@@ -309,6 +346,11 @@ Use cases:
 ### Integration with Templates
 
 ### Integration with Change Detection
+
+### Short-polling
+
+### Long-polling
+//Use Observable.retryWhen?
 
 ### Making Requests within Observable Chain
 
