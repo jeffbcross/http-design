@@ -2,3 +2,6 @@ prototype/bundle.js
 prototype/node_modules/
 prototype/public/bower_components/
 
+prototype/public/BaseConnectionConfig.js
+prototype/public/http.js
+prototype/test/http.spec.js
