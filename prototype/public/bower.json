@@ -1,0 +1,22 @@
+{
+  "name": "http-design-prototype",
+  "version": "2.0.0-alpha-1",
+  "homepage": "https://github.com/jeffbcross/http-design",
+  "authors": [
+    "Jeff Cross <crossj@google.com>"
+  ],
+  "description": "http for angular 2",
+  "main": "http.js",
+  "license": "Apache 2",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "rxjs": "~2.4.1",
+    "immutable": "~3.6.2"
+  }
+}

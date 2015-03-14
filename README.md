@@ -6,8 +6,8 @@ _friend of the web since ‘91_
 
 By [Jeff Cross](https://github.com/jeffbcross) with much input from
 [Caitlin Potter](https://github.com/caitp), [Ben Lesh](https://github.com/blesh),
-[Igor Minar](https://github.com/igorminar), and other Angular team members. Jeff is the one
-responsible for bad ideas and errors.
+[Igor Minar](https://github.com/igorminar), and other Angular team members. All are
+responsible for bad ideas, Jeff is responsible for errors.
 
 ## Overview
 
@@ -19,7 +19,7 @@ heretofore referred to as Http.
 The primary use cases for this library are:
   * Transactional data access, as opposed to continuous access provided by other means like
     WebSockets and Server-Sent Events
-  * Facilitating fetching and manipulating of remote application models
+  * Facilitating fetching and updating of remote application models
   * Loading media into an application
   * Uploading files to servers
 
@@ -76,7 +76,8 @@ possible to bridge other http libraries.
 ### Only Understand Response Types
 
 Http will not concern itself with the structure of data being sent or returned; it will only care
-about the expected response type.
+about the expected response type, as specified by the user-provided configuration, and when
+necessary, confirmed by the response `content-type` header.
 
 ### Low Magic, Limited Scope
 
@@ -108,8 +109,8 @@ proprietary cache before requesting from Http, if not relying on implicit browse
 
 The primary building block of the Http implementation is a `Connection` object, which is created by
 calling the `http` factory function, or another factory of the application's choosing. A
-`Connection` instance represents a single request and response, and implements the `Observable`
-interface.
+`Connection` instance represents a single request and response, and implements the
+[`Observable`](#observable-interface) interface.
 
 Here is a simple example of loading a repository from Github's API:
 
@@ -146,11 +147,11 @@ Using a callable function that accepts a single argument instead of instantiatin
 instantiation in a closure. The requirement of using a factory function is only imposed on the
 officially-supported `Connection` factories. Other conforming implementations may instantiate
 Connections in whatever way suits the Connection, but the returned value should conform to the
-`Observable` interface.
+[`Observable` interface](#observable-interface).
 
 ### `ConnectionConfig`
 
-Connections implement the `Observable` interface, with the returned observable representing the
+Connections implement the [`Observable` interface](#observable-interface), with the returned observable representing the
 response. The `ConnectionConfig` can pass in optional observers to observe connection properties
 "state", and "uploadProgress". The "progress" event of requests can be used to trigger calls to
 onNext of the Connection Observer by setting the `getProgressively` property of the
@@ -226,7 +227,7 @@ does not contain necessary values to execute a request.
 
 #### `Observable` Interface
 
-This will be a minimal subset of the RxJS `Observable` interface [found here](https://github.com/bor
+This will be a minimal subset of the RxJS [`Observable` interface](https://github.com/bor
 isyankov/DefinitelyTyped/blob/8fea426543e19e19db32eb827a02d11bdab30383/rx/rx-lite.d.ts#L217).
 Connections should all be able to upgrade to a compatible `Observable` interface if provided via
 injection into the `Connection` class. This would be accomplished by binding the compatible

@@ -44,6 +44,7 @@ function handleSlow (req, res) {
   var i = 0;
   res.writeHead(200, {
     'Content-Length': '191',
+    'Access-Control-Allow-Origin': '*',
     'Content-Type': 'text/plain; charset=utf-8',
   });
   res.write('get ready for some data!');
