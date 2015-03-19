@@ -15,14 +15,46 @@ export class Response {
         this.bytesLoaded = bytesLoaded;
         this.totalBytes = totalBytes;
         this.previousBytes = previousBytes;
-        console.log('constructed!');
-        var map = Immutable.Map({ foo: 'bar' });
     }
-    
+
     getLatestChunk ():string {
         return this.responseText.slice(this.previousBytes) || '';
     }
 }
+
+export class Connection {
+    readyState: number;
+    constructor(public url?:string) {
+
+    }
+}
+
+export class Backend {
+    static connections: Map<string,Connection> = new Map<string,Connection>();
+    constructor() {
+
+    }
+    static getConnectionByUrl(url: string) {
+        if (!Backend.connections) {
+            return null;
+        }
+
+        return Backend.connections.get(url) || null;
+    }
+
+    static reset () {
+        Backend.connections.clear();
+    }
+
+    static verifyNoPendingConnections () {
+        Backend.connections.forEach(function(c) {
+            if (c.readyState !== 4) {
+                throw new Error(`Connection for ${c.url} has not been resolved`);
+            }
+        });
+    }
+}
+//Backend.connections = new Map<string,Connection>();
 
 export function http(config:string|Immutable.Map<string,string|boolean>) {
     let connectionConfig = BaseConnectionConfig.merge(
@@ -37,7 +69,7 @@ export function http(config:string|Immutable.Map<string,string|boolean>) {
         var xhr = new XMLHttpRequest();
         var totalLoaded;
         xhr.onerror = observer.onError;
-        
+
         if (newConfig.get('getProgressively')) {
           xhr.onprogress = function(e) {
             var response = new Response(xhr.responseText, e.loaded, e.total, totalLoaded || 0);
