@@ -154,8 +154,7 @@ Connections in whatever way suits the Connection, but the returned value should 
 Connections implement the [`Observable` interface](#observable-interface), with the returned observable representing the
 response. The `ConnectionConfig` can pass in optional observers to observe connection properties
 "state", and "uploadProgress". The "progress" event of requests can be used to trigger calls to
-onNext of the Connection Observer by setting the `getProgressively` property of the
-`ConnectionConfig` to true.
+onNext of the "downloadProgress" Observer.
 
 ```javascript
 import {Http} from 'http';
@@ -169,11 +168,6 @@ class MyComponent {
   }
 }
 ```
-
-If the `ConnectionConfig` object contains has a property `getProgressively` with a value of "true,"
-and the responseType is set to "text" or empty string, the observable sequence must be pushed to on
-every request progress event, and must contain the full available response text. When the request
-completes, the connection’s observer onComplete function should be called if present
 
 Since subscribing to the Connection Observable returns a disposable object, if all subscriptions to
 the observable are disposed prior to the underlying connection completing, the connection should
