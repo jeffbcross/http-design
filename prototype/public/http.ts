@@ -102,10 +102,6 @@ export class Connection {
         Backend.connections.set(url, this);
     }
 
-    open(method: string, url: string): void {
-
-    }
-
     send() {
     }
 
@@ -117,6 +113,9 @@ export class Connection {
 
     mockDownload(res: Response) {
         this.downloadObserver.onNext(res);
+        if (res.bytesLoaded === res.totalBytes) {
+            this.downloadObserver.onCompleted();
+        }
     }
 }
 

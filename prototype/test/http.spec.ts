@@ -7,14 +7,16 @@ declare var afterEach;
 declare var fit;
 declare var fdescribe;
 declare var xit;
+declare var jasmine;
 
 import {http, Response, Backend, Connection, ConnectionConfig, BaseConnectionConfig} from '../public/http';
 import Rx = require('rx');
 
+//It's immutable, so we can assign it once
 let baseConnectionConfig = new BaseConnectionConfig();
 
 describe('Http', () => {
-    var baseResponse;
+    let baseResponse;
     beforeEach(() => {
         baseResponse = new Response('base response');
     });
@@ -66,12 +68,15 @@ describe('Http', () => {
 
 
     describe('downloadObserver', () => {
+        afterEach(Backend.reset);
+
+
         it('should report download progress to the observer', () => {
             let url = 'http://chunk.connection';
             let chunks = 0;
             let config = {
                 url: url,
-                downloadObserver: Rx.Observer.create((chunk) => {
+                downloadObserver: Rx.Observer.create(() => {
                     chunks++;
                 }, () => { }, () => {
 
@@ -83,19 +88,30 @@ describe('Http', () => {
             let response = new Response();
             response.totalBytes = 100;
             response.bytesLoaded = 0;
-            response.previousBytes = 0;
-            for (var i = 1; i <= 5; i++) {
+            for (let i = 1; i <= 5; i++) {
                 response.bytesLoaded = i * 20;
                 connection.mockDownload(response);
-                response.previousBytes += 20;
             }
 
             expect(chunks).toBe(5);
-            connection.readyState = 4;
         });
 
-
-        it('should set connection readyState to DONE when download is complete');
+        it('should call complete when all bytes have been downloaded', function() {
+            let url = 'htp://chunk.connection';
+            let complete = jasmine.createSpy('complete');
+            let config = {
+                url: url,
+                downloadObserver: Rx.Observer.create(() => { }, () => { }, complete)
+            }
+            http(config);
+            let connection = Backend.getConnectionByUrl(url);
+            let response = new Response();
+            response.totalBytes = 100;
+            response.bytesLoaded = 100;
+            expect(complete).not.toHaveBeenCalled();
+            connection.mockDownload(response);
+            expect(complete).toHaveBeenCalled();
+        });
     });
 
     describe('uploadObserver', () => {
@@ -136,10 +152,13 @@ describe('Http', () => {
 
 
     describe('retry', () => {
+
     });
 
 
     describe('abort', () => {
+        it('should call cancel on the connection', function() {
+        })
     });
 
 
@@ -158,7 +177,9 @@ describe('Http', () => {
 
 
 describe('Connection', () => {
+    describe('.cancel()', function() {
 
+    });
 });
 
 
