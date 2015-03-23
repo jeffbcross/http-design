@@ -8,18 +8,15 @@ declare var fit;
 declare var fdescribe;
 declare var xit;
 
-import {http, Response, Backend, Connection, ConnectionConfig} from '../public/http';
+import {http, Response, Backend, Connection, ConnectionConfig, BaseConnectionConfig} from '../public/http';
 import Rx = require('rx');
+
+let baseConnectionConfig = new BaseConnectionConfig();
 
 describe('Http', () => {
     var baseResponse;
     beforeEach(() => {
-        baseResponse = new Response({
-            responseText: 'base response',
-            bytesLoaded: 0,
-            totalBytes: 0,
-            previousBytes: 0
-        });
+        baseResponse = new Response('base response');
     });
 
     afterEach(() => {
@@ -69,20 +66,36 @@ describe('Http', () => {
 
 
     describe('downloadObserver', () => {
-        xit('should report download progress to the observer', (done) => {
+        it('should report download progress to the observer', () => {
             let url = 'http://chunk.connection';
             let chunks = 0;
             let config = {
                 url: url,
-                downloadObserver: Rx.Observer.create(function(chunk) {
+                downloadObserver: Rx.Observer.create((chunk) => {
                     chunks++;
                 }, () => { }, () => {
-                        expect(chunks).toBe(5);
-                        done();
+
+
                 })
             }
             http(config);
- });
+            let connection = Backend.getConnectionByUrl(url);
+            let response = new Response();
+            response.totalBytes = 100;
+            response.bytesLoaded = 0;
+            response.previousBytes = 0;
+            for (var i = 1; i <= 5; i++) {
+                response.bytesLoaded = i * 20;
+                connection.mockDownload(response);
+                response.previousBytes += 20;
+            }
+
+            expect(chunks).toBe(5);
+            connection.readyState = 4;
+        });
+
+
+        it('should set connection readyState to DONE when download is complete');
     });
 
     describe('uploadObserver', () => {
@@ -101,7 +114,7 @@ describe('Http', () => {
             http(config);
             let connection = Backend.getConnectionByUrl(url);
             expect(Backend.getConnectionByUrl(url) instanceof Connection).toBe(true);
-            connection.readyState = 4;
+            Backend.reset();
         });
 
 
@@ -113,6 +126,7 @@ describe('Http', () => {
             }
             http(config);
             expect(Backend.connections.size).toBe(0);
+            Backend.reset();
         });
     });
 
@@ -154,11 +168,11 @@ describe('Backend', () => {
     let connection: Connection;
 
     beforeEach(() => {
-        Backend.reset();
-        observer = Rx.Observer.create(() => {}, () => {}, () => {});
-        connection = new Connection(observer);
-        connection.url = url;
+        observer = Rx.Observer.create(() => { }, () => { }, () => { });
+        let config = baseConnectionConfig.merge({ url: url });
+        connection = new Connection(observer, config);
     });
+    beforeEach(Backend.reset);
 
 
     afterEach(() => {
@@ -168,6 +182,10 @@ describe('Backend', () => {
 
 
     describe('.getConnectionByUrl()', () => {
+        beforeEach(function() {
+            Backend.reset();
+        });
+
         it('should return null if no connection for given url', () => {
             expect(Backend.getConnectionByUrl('foo')).toBe(null);
         });

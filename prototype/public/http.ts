@@ -56,7 +56,7 @@ export class BaseConnectionConfig implements IConnectionConfig {
         Object.freeze(this);
     }
 
-    merge (source:IConnectionConfig):BaseConnectionConfig {
+    merge(source: IConnectionConfig): BaseConnectionConfig {
         return new BaseConnectionConfig(source);
     }
 }
@@ -69,8 +69,10 @@ export interface IResponse {
 }
 
 export class Response {
-    responseText: string;
-    constructor({responseText}:IResponse) {
+    bytesLoaded: number;
+    totalBytes: number;
+    previousBytes: number;
+    constructor(public responseText?:string) {
         this.responseText = responseText;
     }
 
@@ -90,15 +92,18 @@ const ReadyStates = {
 export class Connection {
     readyState: number;
     url: string;
-    constructor(public observer:Rx.IObserver<Response>) {
-        this.url = null;
-        this.readyState = ReadyStates.UNSENT;
+    method: string;
+    downloadObserver:Rx.Observer<Response>;
+    constructor(public observer:Rx.IObserver<Response>, config:IConnectionConfig) {
+        var { url, downloadObserver, method } = config;
+        this.url = url;
+        this.readyState = ReadyStates.OPEN;
+        this.downloadObserver = downloadObserver;
+        Backend.connections.set(url, this);
     }
 
     open(method: string, url: string): void {
-        this.url = url;
-        this.readyState = ReadyStates.OPEN;
-        Backend.connections.set(url, this);
+
     }
 
     send() {
@@ -108,6 +113,10 @@ export class Connection {
         //TODO: support progressive responding
         this.readyState = ReadyStates.DONE;
         this.observer.onNext(res);
+    }
+
+    mockDownload(res: Response) {
+        this.downloadObserver.onNext(res);
     }
 }
 
@@ -137,8 +146,8 @@ export class Backend {
         });
     }
 
-    static createConnection(observer:Rx.IObserver<Response>): Connection {
-        return new Connection(observer);
+    static createConnection(observer:Rx.IObserver<Response>, config:IConnectionConfig): Connection {
+        return new Connection(observer, config);
     }
 }
 //Backend.connections = new Map<string,Connection>();
@@ -152,7 +161,7 @@ export function http(config: string|IConnectionConfig) {
         )
 
     let observable = Rx.Observable.create((observer) => {
-        let connection = Backend.createConnection(observer);
+        let connection = Backend.createConnection(observer, connectionConfig);
         connection.open(connectionConfig.method, connectionConfig.url);
         connection.send();
     });
