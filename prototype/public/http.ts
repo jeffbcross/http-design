@@ -20,8 +20,9 @@ export const Methods = {
 };
 
 export interface IConnectionConfig {
-    method: string;
     url: string;
+    method?: string;
+    cold?: boolean;
     downloadObserver?: Rx.Observer<Response>;
     uploadObserver?: Rx.Observer<Request>;
     stateObserver?: Rx.Observer<State>;
@@ -39,6 +40,7 @@ export class ConnectionConfig implements IConnectionConfig{
 export class BaseConnectionConfig implements IConnectionConfig {
     method: string;
     url: string;
+    cold: boolean;
     downloadObserver: Rx.Observer<Response>;
     uploadObserver: Rx.Observer<Request>;
     stateObserver: Rx.Observer<State>;
@@ -49,6 +51,7 @@ export class BaseConnectionConfig implements IConnectionConfig {
         this.downloadObserver = (source && source.downloadObserver) || null;
         this.uploadObserver = (source && source.uploadObserver) || null;
         this.stateObserver = (source && source.stateObserver) || null;
+        this.cold = (source && source.cold) || false;
 
         Object.freeze(this);
     }
@@ -58,8 +61,11 @@ export class BaseConnectionConfig implements IConnectionConfig {
     }
 }
 
-export class IResponse {
+export interface IResponse {
     responseText: string;
+    bytesLoaded?: number;
+    totalBytes?: number;
+    previousBytes?: number;
 }
 
 export class Response {
@@ -73,25 +79,34 @@ export class Response {
     //}
 }
 
+const ReadyStates = {
+    UNSENT: 0,
+    OPEN: 1,
+    HEADERS_RECEIVED: 2,
+    LOADING: 3,
+    DONE: 4
+};
+
 export class Connection {
     readyState: number;
     url: string;
     constructor(public observer:Rx.IObserver<Response>) {
         this.url = null;
-        this.readyState = 0;
+        this.readyState = ReadyStates.UNSENT;
     }
 
     open(method: string, url: string): void {
         this.url = url;
+        this.readyState = ReadyStates.OPEN;
         Backend.connections.set(url, this);
     }
 
     send() {
-
     }
 
     mockRespond(res: Response) {
-        this.readyState = 4;
+        //TODO: support progressive responding
+        this.readyState = ReadyStates.DONE;
         this.observer.onNext(res);
     }
 }
@@ -115,7 +130,7 @@ export class Backend {
     }
 
     static verifyNoPendingConnections () {
-        Backend.connections.forEach(function(c) {
+        Backend.connections.forEach((c) => {
             if (c.readyState !== 4) {
                 throw new Error(`Connection for ${c.url} has not been resolved`);
             }
@@ -136,9 +151,16 @@ export function http(config: string|IConnectionConfig) {
             config
         )
 
-    return Rx.Observable.create(function(observer) {
+    let observable = Rx.Observable.create((observer) => {
         let connection = Backend.createConnection(observer);
         connection.open(connectionConfig.method, connectionConfig.url);
         connection.send();
     });
+
+    if (!connectionConfig.cold) {
+        let connectable = observable.publish();
+        connectable.connect();
+    }
+
+    return observable;
 }
