@@ -3,38 +3,106 @@
 /// <reference path="BaseConnectionConfig.ts" />
 import Immutable = require('immutable');
 import Rx = require('rx');
-import {BaseConnectionConfig} from './BaseConnectionConfig';
+
+export class Request {
+
+}
+
+export class State {
+
+}
+
+export const Methods = {
+    GET: 'get',
+    POST: 'post',
+    PUT: 'put',
+    DELETE: 'delete'
+};
+
+export interface IConnectionConfig {
+    method: string;
+    url: string;
+    downloadObserver?: Rx.Observer<Response>;
+    uploadObserver?: Rx.Observer<Request>;
+    stateObserver?: Rx.Observer<State>;
+}
+
+export class ConnectionConfig implements IConnectionConfig{
+    downloadObserver: Rx.Observer<Response>;
+    uploadObserver: Rx.Observer<Request>;
+    stateObserver: Rx.Observer<State>;
+    constructor(public method?:string, public url?:string) {
+
+    }
+}
+
+export class BaseConnectionConfig implements IConnectionConfig {
+    method: string;
+    url: string;
+    downloadObserver: Rx.Observer<Response>;
+    uploadObserver: Rx.Observer<Request>;
+    stateObserver: Rx.Observer<State>;
+
+    constructor (source?: IConnectionConfig) {
+        this.method = (source && source.method) || Methods.GET;
+        this.url = (source && source.url) || null;
+        this.downloadObserver = (source && source.downloadObserver) || null;
+        this.uploadObserver = (source && source.uploadObserver) || null;
+        this.stateObserver = (source && source.stateObserver) || null;
+
+        Object.freeze(this);
+    }
+
+    merge (source:IConnectionConfig):BaseConnectionConfig {
+        return new BaseConnectionConfig(source);
+    }
+}
+
+export class IResponse {
+    responseText: string;
+}
 
 export class Response {
     responseText: string;
-    bytesLoaded: number;
-    totalBytes: number;
-    previousBytes: number;
-    constructor (responseText:string, bytesLoaded:number, totalBytes:number, previousBytes:number) {
+    constructor({responseText}:IResponse) {
         this.responseText = responseText;
-        this.bytesLoaded = bytesLoaded;
-        this.totalBytes = totalBytes;
-        this.previousBytes = previousBytes;
     }
 
-    getLatestChunk ():string {
-        return this.responseText.slice(this.previousBytes) || '';
-    }
+    //getLatestChunk ():string {
+    //    return this.responseText.slice(this.previousBytes) || '';
+    //}
 }
 
 export class Connection {
     readyState: number;
-    constructor(public url?:string) {
+    url: string;
+    constructor(public observer:Rx.IObserver<Response>) {
+        this.url = null;
+        this.readyState = 0;
+    }
 
+    open(method: string, url: string): void {
+        this.url = url;
+        Backend.connections.set(url, this);
+    }
+
+    send() {
+
+    }
+
+    mockRespond(res: Response) {
+        this.readyState = 4;
+        this.observer.onNext(res);
     }
 }
 
 export class Backend {
-    static connections: Map<string,Connection> = new Map<string,Connection>();
+    static connections: Map<string, Connection> = new Map<string, Connection>();
+
     constructor() {
 
     }
-    static getConnectionByUrl(url: string) {
+    static getConnectionByUrl(url: string):Connection {
         if (!Backend.connections) {
             return null;
         }
@@ -53,52 +121,24 @@ export class Backend {
             }
         });
     }
+
+    static createConnection(observer:Rx.IObserver<Response>): Connection {
+        return new Connection(observer);
+    }
 }
 //Backend.connections = new Map<string,Connection>();
 
-export function http(config:string|Immutable.Map<string,string|boolean>) {
-    let connectionConfig = BaseConnectionConfig.merge(
+export function http(config: string|IConnectionConfig) {
+    let baseConnection = new BaseConnectionConfig();
+    let connectionConfig = baseConnection.merge(
         typeof config === 'string' ?
-          Immutable.Map<string,string>({url: config}):
-          config
+            new ConnectionConfig('get', config) :
+            config
         )
 
     return Rx.Observable.create(function(observer) {
-        observer.onNext('foobar');
-      /*
-        var xhr = new XMLHttpRequest();
-        var totalLoaded;
-        xhr.onerror = observer.onError;
-
-        if (newConfig.get('getProgressively')) {
-          xhr.onprogress = function(e) {
-            var response = new Response(xhr.responseText, e.loaded, e.total, totalLoaded || 0);
-            observer.onNext(response);
-            totalLoaded = e.loaded;
-          }
-          xhr.onload = function() {
-            observer.onCompleted();
-          };
-        } else {
-          xhr.onload = function () {
-            observer.onNext(xhr.responseText);
-            observer.onCompleted();
-          }
-        }
-        xhr.open(newConfig.method, newConfig.url);
-        xhr.send();
-        */
-  });
+        let connection = Backend.createConnection(observer);
+        connection.open(connectionConfig.method, connectionConfig.url);
+        connection.send();
+    });
 }
-
-/*http('http://localhost:8000/slow').
-  subscribe(function(res:Response) {
-    console.log('chunk', res.getLatestChunk());
-  },
-  function(e) {
-    console.log('error', e);
-  },
-  function() {
-    console.log('done');
-  });
-*/
