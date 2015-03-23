@@ -162,7 +162,6 @@ export function http(config: string|IConnectionConfig) {
 
     let observable = Rx.Observable.create((observer) => {
         let connection = Backend.createConnection(observer, connectionConfig);
-        connection.open(connectionConfig.method, connectionConfig.url);
         connection.send();
     });
 
