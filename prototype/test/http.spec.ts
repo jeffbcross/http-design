@@ -9,7 +9,10 @@ declare var fdescribe;
 declare var xit;
 declare var jasmine;
 
-import {http, Response, Backend, Connection, ConnectionConfig, BaseConnectionConfig} from '../public/http';
+import {http} from '../public/http';
+import {Backend, Connection} from '../public/MockConnection';
+import {BaseConnectionConfig, ConnectionConfig, IConnectionConfig} from '../public/BaseConnectionConfig';
+import {Response} from '../public/Response';
 import Rx = require('rx');
 
 //It's immutable, so we can assign it once
