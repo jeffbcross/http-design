@@ -81,9 +81,6 @@ describe('Http', () => {
                 url: url,
                 downloadObserver: Rx.Observer.create(() => {
                     chunks++;
-                }, () => { }, () => {
-
-
                 })
             }
             http(config);
@@ -114,6 +111,7 @@ describe('Http', () => {
             expect(complete).not.toHaveBeenCalled();
             connection.mockDownload(response);
             expect(complete).toHaveBeenCalled();
+            //TODO: assert call onNext as well
         });
     });
 
