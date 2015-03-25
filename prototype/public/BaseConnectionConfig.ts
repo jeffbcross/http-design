@@ -1,3 +1,4 @@
+import {Request} from './Request';
 import {Response} from './Response';
 import {Methods} from './Methods';
 
@@ -8,6 +9,8 @@ export interface IConnectionConfig {
     downloadObserver?: Rx.Observer<Response>;
     uploadObserver?: Rx.Observer<any>;
     stateObserver?: Rx.Observer<any>;
+    requestTransforms?: Array<(req:Request) => Request>;
+    responseTransforms?: Array<Function>;
 }
 
 export class ConnectionConfig implements IConnectionConfig {
@@ -24,8 +27,10 @@ export class BaseConnectionConfig implements IConnectionConfig {
     url: string;
     cold: boolean;
     downloadObserver: Rx.Observer<Response>;
-    uploadObserver: Rx.Observer<any>
-    stateObserver: Rx.Observer<any>
+    uploadObserver: Rx.Observer<any>;
+    stateObserver: Rx.Observer<any>;
+    requestTransforms: Array<(req:Request) => Request>;
+    responseTransforms: Array<Function>;
 
     constructor(source?: IConnectionConfig) {
         this.method = (source && source.method) || Methods.GET;
@@ -34,6 +39,8 @@ export class BaseConnectionConfig implements IConnectionConfig {
         this.uploadObserver = (source && source.uploadObserver) || null;
         this.stateObserver = (source && source.stateObserver) || null;
         this.cold = (source && source.cold) || false;
+        this.requestTransforms = (source && source.requestTransforms) || [];
+        this.responseTransforms = (source && source.responseTransforms) || [];
 
         Object.freeze(this);
     }

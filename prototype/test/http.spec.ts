@@ -13,10 +13,11 @@ import {http} from '../public/http';
 import {Backend, Connection} from '../public/MockConnection';
 import {BaseConnectionConfig, ConnectionConfig, IConnectionConfig} from '../public/BaseConnectionConfig';
 import {Response} from '../public/Response';
+import {Request} from '../public/Request';
 import Rx = require('rx');
 
 //It's immutable, so we can assign it once
-let baseConnectionConfig = new BaseConnectionConfig();
+let baseConnectionConfig = new BaseConnectionConfig({});
 
 describe('Http', () => {
     let baseResponse;
@@ -129,6 +130,7 @@ describe('Http', () => {
 
 
     describe('Hot and Cold', () => {
+        afterEach(Backend.reset);
         it('should send the connection if not passed cold property', () => {
             let url = 'http://hot.url'
             let config = {
@@ -137,8 +139,6 @@ describe('Http', () => {
             http(config);
             let connection = Backend.getConnectionByUrl(url);
             expect(Backend.getConnectionByUrl(url)[0] instanceof Connection).toBe(true);
-            Backend.reset();
-
         });
 
         it('should only create one connection when subscribing to a hot connection', () => {
@@ -148,7 +148,6 @@ describe('Http', () => {
             expect(connections.length).toBe(1);
             observable.subscribe(() => { });
             expect(connections.length).toBe(1);
-            Backend.reset();
         });
 
         it('should NOT send the connection if passed cold value of true', () => {
@@ -159,7 +158,6 @@ describe('Http', () => {
             }
             http(config);
             expect(Backend.connections.size).toBe(0);
-            Backend.reset();
         });
     });
 
@@ -174,7 +172,7 @@ describe('Http', () => {
 
 
     describe('abort', () => {
-        it('should call cancel on the connection', function() {
+        it('should call cancel on the connection', () => {
         })
     });
 
@@ -184,6 +182,20 @@ describe('Http', () => {
 
 
     describe('transformation', () => {
+        afterEach(Backend.reset);
+
+        it('should apply request transformations prior to sending', () => {
+            let url = 'http://transform.me';
+            let config = {
+                url: url,
+                requestTransforms: [(req:Request):Request => {
+                    return new Request(url, 'somedata');
+                }]
+            };
+            http(config);
+            let connection = Backend.getConnectionByUrl(url)[0];
+            expect(connection.mockSends[0]).toBe('somedata');
+        });
     });
 
 

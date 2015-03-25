@@ -1,3 +1,4 @@
+import {Request} from './Request';
 import {Response} from './Response';
 import {IConnectionConfig} from './BaseConnectionConfig';
 import {ReadyStates} from './ReadyStates';
@@ -8,6 +9,8 @@ export class Connection {
     url: string;
     method: string;
     downloadObserver: Rx.Observer<Response>;
+    mockSends: Array<string>;
+    request: Request;
     constructor(public observer: Rx.IObserver<Response>, config: IConnectionConfig) {
         var { url, downloadObserver, method } = config;
         this.url = url;
@@ -16,9 +19,12 @@ export class Connection {
         let connections = Backend.connections.get(url) || [];
         connections.push(this);
         Backend.connections.set(url, connections);
+        this.mockSends = [];
+        this.request = new Request(url);
     }
 
-    send() {
+    send(data?:string) {
+        this.mockSends.push(data);
     }
 
     mockRespond(res: Response) {
