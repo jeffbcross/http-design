@@ -23,6 +23,9 @@ export class BaseConnectionConfig implements IConnectionConfig {
     method: string;
     url: string;
     cold: boolean;
+    downloadObserver: Rx.Observer<Response>;
+    uploadObserver: Rx.Observer<any>
+    stateObserver: Rx.Observer<any>
 
     constructor(source?: IConnectionConfig) {
         this.method = (source && source.method) || Methods.GET;
