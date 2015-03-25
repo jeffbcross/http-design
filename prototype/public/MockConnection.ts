@@ -13,14 +13,15 @@ export class Connection {
         this.url = url;
         this.readyState = ReadyStates.OPEN;
         this.downloadObserver = downloadObserver;
-        Backend.connections.set(url, this);
+        let connections = Backend.connections.get(url) || [];
+        connections.push(this);
+        Backend.connections.set(url, connections);
     }
 
     send() {
     }
 
     mockRespond(res: Response) {
-        //TODO: support progressive responding
         this.readyState = ReadyStates.DONE;
         this.observer.onNext(res);
     }
@@ -34,17 +35,14 @@ export class Connection {
 }
 
 export class Backend {
-    static connections: Map<string, Connection> = new Map<string, Connection>();
+    static connections: Map<string, Array<Connection>> = new Map<string, Array<Connection>>();
 
     constructor() {
 
     }
-    static getConnectionByUrl(url: string): Connection {
-        if (!Backend.connections) {
-            return null;
-        }
-
-        return Backend.connections.get(url) || null;
+    static getConnectionByUrl(url: string): Array<Connection> {
+        let connection = Backend.connections && Backend.connections.get(url);
+        return connection || [];
     }
 
     static reset() {
@@ -52,10 +50,12 @@ export class Backend {
     }
 
     static verifyNoPendingConnections() {
-        Backend.connections.forEach((c) => {
-            if (c.readyState !== 4) {
-                throw new Error(`Connection for ${c.url} has not been resolved`);
-            }
+        Backend.connections.forEach((l) => {
+            l.forEach((c) => {
+                if (c.readyState !== 4) {
+                    throw new Error(`Connection for ${c.url} has not been resolved`);
+                }
+            });
         });
     }
 

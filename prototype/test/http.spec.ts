@@ -35,7 +35,8 @@ describe('Http', () => {
         http(url).subscribe((res: Response) => {
             text = res.responseText;
         });
-        let connection = Backend.getConnectionByUrl(url);
+        let connections = Backend.getConnectionByUrl(url);
+        let connection = connections[0];
         connection.mockRespond(baseResponse);
         expect(text).toBe('base response');
     });
@@ -49,24 +50,27 @@ describe('Http', () => {
             text = res.responseText;
 
         });
-        let connection = Backend.getConnectionByUrl(url);
+        let connections = Backend.getConnectionByUrl(url);
+        let connection = connections[0];
         connection.mockRespond(baseResponse);
         expect(text).toBe('base response');
     });
 
 
-    it('should perform a get request for given url if passed a dictionary', (done) => {
+    it('should perform a get request for given url if passed a dictionary', () => {
         let url = 'http://basic.connection';
         let config = {
             method: 'get',
             url: url
         };
+        let text;
         http(config).subscribe((res: Response) => {
-            expect(res.responseText).toBe('base response');
-            done();
+            text = res.responseText;
         });
-        let connection = Backend.getConnectionByUrl(url);
+        let connections = Backend.getConnectionByUrl(url);
+        let connection = connections[0];
         connection.mockRespond(baseResponse);
+        expect(text).toBe('base response');
     });
 
 
@@ -84,7 +88,8 @@ describe('Http', () => {
                 })
             }
             http(config);
-            let connection = Backend.getConnectionByUrl(url);
+            let connections = Backend.getConnectionByUrl(url);
+            let connection = connections[0];
             let response = new Response();
             response.totalBytes = 100;
             response.bytesLoaded = 0;
@@ -104,7 +109,8 @@ describe('Http', () => {
                 downloadObserver: Rx.Observer.create(() => { }, () => { }, complete)
             }
             http(config);
-            let connection = Backend.getConnectionByUrl(url);
+            let connections = Backend.getConnectionByUrl(url);
+            let connection = connections[0];
             let response = new Response();
             response.totalBytes = 100;
             response.bytesLoaded = 100;
@@ -130,10 +136,20 @@ describe('Http', () => {
             }
             http(config);
             let connection = Backend.getConnectionByUrl(url);
-            expect(Backend.getConnectionByUrl(url) instanceof Connection).toBe(true);
+            expect(Backend.getConnectionByUrl(url)[0] instanceof Connection).toBe(true);
             Backend.reset();
+
         });
 
+        it('should only create one connection when subscribing to a hot connection', () => {
+            let url = 'http://hot.url';
+            let observable = http(url);
+            let connections = Backend.getConnectionByUrl(url);
+            expect(connections.length).toBe(1);
+            observable.subscribe(() => { });
+            expect(connections.length).toBe(1);
+            Backend.reset();
+        });
 
         it('should NOT send the connection if passed cold value of true', () => {
             let url = 'http://hot.url'
@@ -209,14 +225,14 @@ describe('Backend', () => {
         });
 
         it('should return null if no connection for given url', () => {
-            expect(Backend.getConnectionByUrl('foo')).toBe(null);
+            expect(Backend.getConnectionByUrl('foo')).toEqual([]);
         });
 
 
         it('should return the connection if one exists for given url', () => {
             expect(Backend.connections.size).toBe(0);
-            Backend.connections.set(url, connection);
-            expect(Backend.getConnectionByUrl(url) instanceof Connection).toBe(true);
+            Backend.connections.set(url, [connection]);
+            expect(Backend.getConnectionByUrl(url)[0] instanceof Connection).toBe(true);
             connection.readyState = 4;
         });
 
@@ -229,7 +245,7 @@ describe('Backend', () => {
     describe('.reset()', () => {
         it('should clear all connections', () => {
             expect(Backend.connections.size).toBe(0);
-            Backend.connections.set(url, connection);
+            Backend.connections.set(url, [connection]);
             expect(Backend.connections.size).toBe(1);
             Backend.reset();
             expect(Backend.connections.size).toBe(0);
@@ -239,7 +255,7 @@ describe('Backend', () => {
 
     describe('.verifyNoPendingConnections()', () => {
         it('should throw if any connection does not have a complete readystate', () => {
-            Backend.connections.set(url, connection);
+            Backend.connections.set(url, [connection]);
             expect(Backend.verifyNoPendingConnections).toThrow(
                 new Error(`Connection for ${url} has not been resolved`));
             connection.readyState = 4;
