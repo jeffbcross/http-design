@@ -7,6 +7,7 @@ prototype/public/IConnection.js
 prototype/public/Methods.js
 prototype/public/MockConnection.js
 prototype/public/ReadyStates.js
+prototype/public/Request.js
 prototype/public/Response.js
 prototype/public/XHRConnection.js
 prototype/public/http.js
