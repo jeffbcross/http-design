@@ -3,14 +3,14 @@ import {Response} from './Response';
 import {Methods} from './Methods';
 
 export interface IConnectionConfig {
-    url: string;
+    url?: string;
     method?: string;
     cold?: boolean;
     downloadObserver?: Rx.Observer<Response>;
     uploadObserver?: Rx.Observer<any>;
     stateObserver?: Rx.Observer<any>;
-    requestTransforms?: Array<(req:Request) => Request>;
-    responseTransforms?: Array<Function>;
+    requestTransforms?: Array<(req: Request) => Request>;
+    responseTransforms?: Array<(res: Response) => Response>;
 }
 
 export class ConnectionConfig implements IConnectionConfig {
@@ -30,17 +30,26 @@ export class BaseConnectionConfig implements IConnectionConfig {
     uploadObserver: Rx.Observer<any>;
     stateObserver: Rx.Observer<any>;
     requestTransforms: Array<(req:Request) => Request>;
-    responseTransforms: Array<Function>;
+    responseTransforms: Array<(res: Response) => Response>;
 
-    constructor(source?: IConnectionConfig) {
-        this.method = (source && source.method) || Methods.GET;
-        this.url = (source && source.url) || null;
-        this.downloadObserver = (source && source.downloadObserver) || null;
-        this.uploadObserver = (source && source.uploadObserver) || null;
-        this.stateObserver = (source && source.stateObserver) || null;
-        this.cold = (source && source.cold) || false;
-        this.requestTransforms = (source && source.requestTransforms) || [];
-        this.responseTransforms = (source && source.responseTransforms) || [];
+    constructor ({
+        method = Methods.GET,
+        url = null,
+        downloadObserver = null,
+        uploadObserver = null,
+        stateObserver = null,
+        cold = false,
+        requestTransforms = [],
+        responseTransforms = []
+    }: IConnectionConfig) {
+        this.method = method;
+        this.url = url;
+        this.downloadObserver = downloadObserver;
+        this.uploadObserver = uploadObserver;
+        this.stateObserver = stateObserver;
+        this.cold = cold;
+        this.requestTransforms = requestTransforms;
+        this.responseTransforms = responseTransforms;
 
         Object.freeze(this);
     }
