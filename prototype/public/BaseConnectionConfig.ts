@@ -6,7 +6,6 @@ import Rx = require('rx');
 export interface IConnectionConfig {
     url?: string;
     method?: string;
-    cold?: boolean;
     downloadObserver?: Rx.Observer<Response>;
     uploadObserver?: Rx.Observer<any>;
     stateObserver?: Rx.Observer<any>;
@@ -26,7 +25,6 @@ export class ConnectionConfig implements IConnectionConfig {
 export class BaseConnectionConfig implements IConnectionConfig {
     method: string;
     url: string;
-    cold: boolean;
     downloadObserver: Rx.Observer<Response>;
     uploadObserver: Rx.Observer<any>;
     stateObserver: Rx.Observer<any>;
@@ -39,7 +37,6 @@ export class BaseConnectionConfig implements IConnectionConfig {
         downloadObserver = null,
         uploadObserver = null,
         stateObserver = null,
-        cold = false,
         requestTransformer = (req) => {return req},
         responseTransformer = (res) => { return res}
     }: IConnectionConfig) {
@@ -48,7 +45,6 @@ export class BaseConnectionConfig implements IConnectionConfig {
         this.downloadObserver = downloadObserver;
         this.uploadObserver = uploadObserver;
         this.stateObserver = stateObserver;
-        this.cold = cold;
         this.requestTransformer = requestTransformer;
         this.responseTransformer = responseTransformer;
 
