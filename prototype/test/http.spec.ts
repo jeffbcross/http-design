@@ -77,7 +77,6 @@ describe('Http', () => {
     describe('downloadObserver', () => {
         afterEach(Backend.reset);
 
-
         it('should report download progress to the observer', () => {
             let url = 'http://chunk.connection';
             let chunks = 0;
@@ -87,7 +86,7 @@ describe('Http', () => {
                     chunks++;
                 })
             }
-            http(config);
+            http(config).publish().connect();
             let connections = Backend.getConnectionByUrl(url);
             let connection = connections[0];
             let response = new Response();
@@ -108,7 +107,7 @@ describe('Http', () => {
                 url: url,
                 downloadObserver: Rx.Observer.create(() => { }, () => { }, complete)
             }
-            http(config);
+            http(config).publish().connect();
             let connections = Backend.getConnectionByUrl(url);
             let connection = connections[0];
             let response = new Response();
@@ -125,39 +124,6 @@ describe('Http', () => {
     });
 
     describe('stateObserver', () => {
-    });
-
-
-    describe('Hot and Cold', () => {
-        afterEach(Backend.reset);
-        it('should send the connection if not passed cold property', () => {
-            let url = 'http://hot.url'
-            let config = {
-                url: url
-            }
-            http(config);
-            let connection = Backend.getConnectionByUrl(url);
-            expect(Backend.getConnectionByUrl(url)[0] instanceof Connection).toBe(true);
-        });
-
-        it('should only create one connection when subscribing to a hot connection', () => {
-            let url = 'http://hot.url';
-            let observable = http(url);
-            let connections = Backend.getConnectionByUrl(url);
-            expect(connections.length).toBe(1);
-            observable.subscribe(() => { });
-            expect(connections.length).toBe(1);
-        });
-
-        it('should NOT send the connection if passed cold value of true', () => {
-            let url = 'http://hot.url'
-            let config = {
-                url: url,
-                cold: true
-            }
-            http(config);
-            expect(Backend.connections.size).toBe(0);
-        });
     });
 
 
@@ -191,7 +157,7 @@ describe('Http', () => {
                     return reqs.map(req => new Request(url, 'somedata'));
                 }
             };
-            http(config);
+            http(config).publish().connect();
             let connection = Backend.getConnectionByUrl(url)[0];
             expect(connection.mockSends[0].data).toBe('somedata');
         });

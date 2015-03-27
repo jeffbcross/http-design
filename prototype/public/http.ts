@@ -24,11 +24,5 @@ export function http(config: string|IConnectionConfig) {
             flatMap(request => connection.send(request))
     });
 
-    if (!connectionConfig.cold) {
-        let connectable = observable.publish();
-        connectable.connect();
-        return connectable;
-    }
-
     return observable;
 }
