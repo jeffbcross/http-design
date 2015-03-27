@@ -19,9 +19,9 @@ export function http(config: string|IConnectionConfig) {
         flatMap(connectionConfig => {
         let connection: Connection = Backend.createConnection(connectionConfig);
         let request: Request = connection.request;
-        return connectionConfig.
-            requestTransformer(Rx.Observable.just(request)).
-            flatMap(request => connection.send(request))
+        return connectionConfig.responseTransformer(connectionConfig.
+                    requestTransformer(Rx.Observable.just(request)).
+                    flatMap(request => connection.send(request)))
     });
 
     return observable;

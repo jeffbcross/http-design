@@ -11,7 +11,7 @@ export interface IConnectionConfig {
     uploadObserver?: Rx.Observer<any>;
     stateObserver?: Rx.Observer<any>;
     requestTransformer?: (req: Rx.Observable<Request>) => Rx.Observable<Request>;
-    responseTransforms?: Array<(res: Response) => Response>;
+    responseTransformer?: (res: Rx.Observable<Response>) => Rx.Observable<Response>;
 }
 
 export class ConnectionConfig implements IConnectionConfig {
@@ -31,7 +31,7 @@ export class BaseConnectionConfig implements IConnectionConfig {
     uploadObserver: Rx.Observer<any>;
     stateObserver: Rx.Observer<any>;
     requestTransformer: (req: Rx.Observable<Request>) => Rx.Observable<Request>;
-    responseTransforms: Array<(res: Response) => Response>;
+    responseTransformer: (res: Rx.Observable<Response>) => Rx.Observable<Response>;
 
     constructor ({
         method = Methods.GET,
@@ -41,7 +41,7 @@ export class BaseConnectionConfig implements IConnectionConfig {
         stateObserver = null,
         cold = false,
         requestTransformer = (req) => {return req},
-        responseTransforms = []
+        responseTransformer = (res) => { return res}
     }: IConnectionConfig) {
         this.method = method;
         this.url = url;
@@ -50,7 +50,7 @@ export class BaseConnectionConfig implements IConnectionConfig {
         this.stateObserver = stateObserver;
         this.cold = cold;
         this.requestTransformer = requestTransformer;
-        this.responseTransforms = responseTransforms;
+        this.responseTransformer = responseTransformer;
 
         Object.freeze(this);
     }

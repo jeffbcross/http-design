@@ -161,6 +161,24 @@ describe('Http', () => {
             let connection = Backend.getConnectionByUrl(url)[0];
             expect(connection.mockSends[0].data).toBe('somedata');
         });
+
+
+        it('should apply response transformations before publishing', () => {
+            let url = 'http://transform.me';
+            let config = {
+                url: url,
+                responseTransformer: (responses:Rx.Observable<Response>):Rx.Observable<Response> => {
+                    return responses.map(response => new Response('somedata'));
+                }
+            };
+            let txt;
+            http(config).subscribe(res => {
+                txt = res.responseText;
+            });
+            let connection = Backend.getConnectionByUrl(url)[0];
+            connection.mockRespond(new Response('no data'));
+            expect(txt).toBe('somedata');
+        });
     });
 
 
