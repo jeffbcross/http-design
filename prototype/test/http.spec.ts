@@ -49,7 +49,6 @@ describe('Http', () => {
         let text;
         http(config).subscribe((res: Response) => {
             text = res.responseText;
-
         });
         let connections = Backend.getConnectionByUrl(url);
         let connection = connections[0];
@@ -188,13 +187,13 @@ describe('Http', () => {
             let url = 'http://transform.me';
             let config = {
                 url: url,
-                requestTransforms: [(req:Request):Request => {
-                    return new Request(url, 'somedata');
-                }]
+                requestTransformer: (reqs:Rx.Observable<Request>):Rx.Observable<Request> => {
+                    return reqs.map(req => new Request(url, 'somedata'));
+                }
             };
             http(config);
             let connection = Backend.getConnectionByUrl(url)[0];
-            expect(connection.mockSends[0]).toBe('somedata');
+            expect(connection.mockSends[0].data).toBe('somedata');
         });
     });
 
@@ -220,7 +219,7 @@ describe('Backend', () => {
     beforeEach(() => {
         observer = Rx.Observer.create(() => { }, () => { }, () => { });
         let config = baseConnectionConfig.merge({ url: url });
-        connection = new Connection(observer, config);
+        connection = new Connection(config);
     });
     beforeEach(Backend.reset);
 

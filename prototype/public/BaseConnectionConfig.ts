@@ -1,6 +1,7 @@
 import {Request} from './Request';
 import {Response} from './Response';
 import {Methods} from './Methods';
+import Rx = require('rx');
 
 export interface IConnectionConfig {
     url?: string;
@@ -9,7 +10,7 @@ export interface IConnectionConfig {
     downloadObserver?: Rx.Observer<Response>;
     uploadObserver?: Rx.Observer<any>;
     stateObserver?: Rx.Observer<any>;
-    requestTransforms?: Array<(req: Request) => Request>;
+    requestTransformer?: (req: Rx.Observable<Request>) => Rx.Observable<Request>;
     responseTransforms?: Array<(res: Response) => Response>;
 }
 
@@ -29,7 +30,7 @@ export class BaseConnectionConfig implements IConnectionConfig {
     downloadObserver: Rx.Observer<Response>;
     uploadObserver: Rx.Observer<any>;
     stateObserver: Rx.Observer<any>;
-    requestTransforms: Array<(req:Request) => Request>;
+    requestTransformer: (req: Rx.Observable<Request>) => Rx.Observable<Request>;
     responseTransforms: Array<(res: Response) => Response>;
 
     constructor ({
@@ -39,7 +40,7 @@ export class BaseConnectionConfig implements IConnectionConfig {
         uploadObserver = null,
         stateObserver = null,
         cold = false,
-        requestTransforms = [],
+        requestTransformer = (req) => {return req},
         responseTransforms = []
     }: IConnectionConfig) {
         this.method = method;
@@ -48,7 +49,7 @@ export class BaseConnectionConfig implements IConnectionConfig {
         this.uploadObserver = uploadObserver;
         this.stateObserver = stateObserver;
         this.cold = cold;
-        this.requestTransforms = requestTransforms;
+        this.requestTransformer = requestTransformer;
         this.responseTransforms = responseTransforms;
 
         Object.freeze(this);

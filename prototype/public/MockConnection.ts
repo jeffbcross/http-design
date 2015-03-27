@@ -3,15 +3,17 @@ import {Response} from './Response';
 import {IConnectionConfig} from './BaseConnectionConfig';
 import {ReadyStates} from './ReadyStates';
 import {IConnection, IConnectionBackend} from './IConnection';
+import Rx = require('rx');
 
 export class Connection {
     readyState: number;
     url: string;
     method: string;
     downloadObserver: Rx.Observer<Response>;
-    mockSends: Array<string>;
+    mockSends: Array<Request>;
     request: Request;
-    constructor(public observer: Rx.IObserver<Response>, config: IConnectionConfig) {
+    mockResponses: Rx.Subject<Response>;
+    constructor(config: IConnectionConfig) {
         var { url, downloadObserver, method } = config;
         this.url = url;
         this.readyState = ReadyStates.OPEN;
@@ -20,16 +22,18 @@ export class Connection {
         connections.push(this);
         Backend.connections.set(url, connections);
         this.mockSends = [];
+        this.mockResponses = new Rx.Subject<Response>();
         this.request = new Request(url);
     }
 
-    send(data?:string) {
-        this.mockSends.push(data);
+    send(req: Request): Rx.Observable<Response> {
+        this.mockSends.push(req);
+        return this.mockResponses;
     }
 
     mockRespond(res: Response) {
         this.readyState = ReadyStates.DONE;
-        this.observer.onNext(res);
+        this.mockResponses.onNext(res);
     }
 
     mockDownload(res: Response) {
@@ -65,7 +69,7 @@ export class Backend {
         });
     }
 
-    static createConnection(observer: Rx.IObserver<Response>, config: IConnectionConfig): Connection {
-        return new Connection(observer, config);
+    static createConnection(config: IConnectionConfig): Connection {
+        return new Connection(config);
     }
 }

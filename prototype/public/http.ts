@@ -10,26 +10,18 @@ import {Backend, Connection} from './MockConnection';
 
 export function http(config: string|IConnectionConfig) {
     let baseConnection = new BaseConnectionConfig({});
-    let connectionConfig = baseConnection.merge(
-        typeof config === 'string' ?
-            new ConnectionConfig('get', config) :
-            config
-        )
 
-    let observable = Rx.Observable.create((observer) => {
-        let connection:Connection = Backend.createConnection(observer, connectionConfig);
-        let request:Request = connection.request;
+    let connectionConfig = baseConnection.merge(typeof config === 'string' ?
+        new ConnectionConfig('get', config) :
+        config);
 
-        if (connectionConfig.requestTransforms.length) {
-            let requestObservable:Rx.Observable<Request> = Rx.Observable.fromArray([request]);
-            connectionConfig.requestTransforms.reduce((prev, fn) => {
-                return prev.map(fn);
-            }, requestObservable).subscribe((req: Request) => {
-                connection.send(req.data);
-            });
-        } else {
-            connection.send(request.data);
-        }
+    let observable = Rx.Observable.just(connectionConfig).
+        flatMap(connectionConfig => {
+        let connection: Connection = Backend.createConnection(connectionConfig);
+        let request: Request = connection.request;
+        return connectionConfig.
+            requestTransformer(Rx.Observable.just(request)).
+            flatMap(request => connection.send(request))
     });
 
     if (!connectionConfig.cold) {
