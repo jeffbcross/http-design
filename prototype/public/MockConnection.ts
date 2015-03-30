@@ -34,6 +34,7 @@ export class Connection {
     mockRespond(res: Response) {
         this.readyState = ReadyStates.DONE;
         this.mockResponses.onNext(res);
+        this.mockResponses.onCompleted();
     }
 
     mockDownload(res: Response) {
@@ -41,6 +42,12 @@ export class Connection {
         if (res.bytesLoaded === res.totalBytes) {
             this.downloadObserver.onCompleted();
         }
+    }
+
+    mockError(err) {
+        this.readyState = ReadyStates.DONE;
+        this.mockResponses.onError(err);
+        this.mockResponses.onCompleted();
     }
 }
 

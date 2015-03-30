@@ -132,7 +132,25 @@ describe('Http', () => {
 
 
     describe('retry', () => {
-
+        it('should try the connection specified number of times on errors', () => {
+            let url = 'http://flaky.url';
+            let successSpy = jasmine.createSpy('success');
+            let errorSpy = jasmine.createSpy('error');
+            let response = new Response({reponseText: 'finally!'})
+            let completeSpy = jasmine.createSpy('complete');
+            http(url).
+                retry(2).
+                subscribe(successSpy, errorSpy, completeSpy);
+            let connections = Backend.getConnectionByUrl(url);
+            expect(connections.length).toBe(1);
+            let connection = connections.pop();
+            connection.mockError();
+            connection = connections.pop();
+            connection.mockRespond(response);
+            expect(errorSpy.calls.count()).toBe(0);
+            expect(successSpy.calls.count()).toBe(1);
+            expect(completeSpy).toHaveBeenCalled();
+        });
     });
 
 
