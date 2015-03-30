@@ -22,7 +22,7 @@ let baseConnectionConfig = new BaseConnectionConfig({});
 describe('Http', () => {
     let baseResponse;
     beforeEach(() => {
-        baseResponse = new Response('base response');
+        baseResponse = new Response({responseText:'base response'});
     });
 
     afterEach(() => {
@@ -89,7 +89,7 @@ describe('Http', () => {
             http(config).publish().connect();
             let connections = Backend.getConnectionByUrl(url);
             let connection = connections[0];
-            let response = new Response();
+            let response = new Response({});
             response.totalBytes = 100;
             response.bytesLoaded = 0;
             for (let i = 1; i <= 5; i++) {
@@ -110,7 +110,7 @@ describe('Http', () => {
             http(config).publish().connect();
             let connections = Backend.getConnectionByUrl(url);
             let connection = connections[0];
-            let response = new Response();
+            let response = new Response({});
             response.totalBytes = 100;
             response.bytesLoaded = 100;
             expect(complete).not.toHaveBeenCalled();
@@ -143,6 +143,61 @@ describe('Http', () => {
 
 
     describe('caching', () => {
+        afterEach(Backend.reset);
+
+        it('should set response to cache setter', (done) => {
+            let req, res;
+            let url = 'http://cache.me.plz';
+            let request = new Request(url);
+            let config = {
+                url: url,
+                requestTransformer: (req) => {
+                    return Rx.Observable.just(request);
+                },
+                cacheSetter: jasmine.createSpy()
+            }
+            let response = new Response({});
+            http(config).subscribe(() => {
+                expect(config.cacheSetter).toHaveBeenCalledWith(request, response);
+                done();
+            });
+            let connection = Backend.getConnectionByUrl(url)[0];
+            connection.mockRespond(response);
+        });
+
+
+        it('should try to load response from cache', () => {
+            let url = 'http://cache.me.please';
+            let response = new Response({});
+            let subject = new Rx.Subject();
+            let config = {
+                url: url,
+                cacheGetter: (req) => subject
+            };
+            let finalRes;
+            http(config).
+                subscribe(res => finalRes = res);
+            subject.onNext(response);
+            expect(finalRes).toBe(response);
+        });
+
+
+        it('should set connection to done after response received', () => {
+            let url = 'http://cache.me.please';
+            let response = new Response({});
+            let subject = new Rx.Subject();
+            let config = {
+                url: url,
+                cacheGetter: (req) => subject
+            };
+            let finalRes;
+            http(config).
+                subscribe(res => finalRes = res);
+            let connection = Backend.getConnectionByUrl(url)[0];
+            expect(connection.readyState).toBe(1);
+            subject.onNext(response);
+            expect(connection.readyState).toBe(4);
+        });
     });
 
 
@@ -168,7 +223,7 @@ describe('Http', () => {
             let config = {
                 url: url,
                 responseTransformer: (responses:Rx.Observable<Response>):Rx.Observable<Response> => {
-                    return responses.map(response => new Response('somedata'));
+                    return responses.map(response => new Response({responseText:'somedata'}));
                 }
             };
             let txt;
@@ -176,7 +231,7 @@ describe('Http', () => {
                 txt = res.responseText;
             });
             let connection = Backend.getConnectionByUrl(url)[0];
-            connection.mockRespond(new Response('no data'));
+            connection.mockRespond(new Response({responseText:'no data'}));
             expect(txt).toBe('somedata');
         });
     });
