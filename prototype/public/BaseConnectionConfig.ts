@@ -1,35 +1,22 @@
+import {IConnectionConfig} from './IConnection';
 import {Request} from './Request';
 import {Response} from './Response';
 import {Methods} from './Methods';
 import Rx = require('rx');
 
-export interface IConnectionConfig {
-    url?: string;
-    method?: string;
-    downloadObserver?: Rx.Observer<Response>;
-    uploadObserver?: Rx.Observer<any>;
-    stateObserver?: Rx.Observer<any>;
-                              //Hack                 Hack
-    cacheSetter?: (req:Request|Response, res:Response|Request) => any;
-    cacheGetter?: (req:Rx.Observable<Request>) => Rx.Observable<Response>;
-    requestTransformer?: (req: Rx.Observable<Request>) => Rx.Observable<Request>;
-    responseTransformer?: (res: Rx.Observable<Response>) => Rx.Observable<Response>;
-}
-
-
 export class ConnectionConfig implements IConnectionConfig {
     downloadObserver: Rx.Observer<Response>;
     uploadObserver: Rx.Observer<any>;
     stateObserver: Rx.Observer<any>;
-    constructor(public method?: string, public url?: string) {
+    constructor(public method?: Methods, public url?: string) {
 
     }
 }
 
 export class BaseConnectionConfig implements IConnectionConfig {
-    method: string;
+    method: Methods;
     url: string;
-                              //Hack                 Hack
+    //                        TypeScript Hack        Typescript Hack
     cacheSetter: (req:Request|Response, res:Response|Request) => any;
     cacheGetter: (req:Rx.Observable<Request>) => Rx.Observable<Response>;
     downloadObserver: Rx.Observer<Response>;
@@ -58,11 +45,15 @@ export class BaseConnectionConfig implements IConnectionConfig {
         this.responseTransformer = responseTransformer;
         this.cacheGetter = cacheGetter;
         this.cacheSetter = cacheSetter;
-
+        // Shallow freeze for basic immutability.
         Object.freeze(this);
     }
 
     merge(source: IConnectionConfig): BaseConnectionConfig {
+        /**
+         * Ideally this would implement a more performant merge strategy, but this is expected to
+         * not be a hot path.
+         **/
         return new BaseConnectionConfig(source);
     }
 }

@@ -11,7 +11,8 @@ declare var jasmine;
 
 import {http} from '../public/http';
 import {Backend, Connection} from '../public/MockConnection';
-import {BaseConnectionConfig, ConnectionConfig, IConnectionConfig} from '../public/BaseConnectionConfig';
+import {BaseConnectionConfig, ConnectionConfig} from '../public/BaseConnectionConfig';
+import {Methods} from '../public/Methods';
 import {Response} from '../public/Response';
 import {Request} from '../public/Request';
 import Rx = require('rx');
@@ -45,7 +46,7 @@ describe('Http', () => {
 
     it('should perform a get request for given url if passed a ConnectionConfig instance', () => {
         let url = 'http://basic.connection';
-        let config = new ConnectionConfig('get', url);
+        let config = new ConnectionConfig(Methods.GET, url);
         let text;
         http(config).subscribe((res: Response) => {
             text = res.responseText;
@@ -60,7 +61,7 @@ describe('Http', () => {
     it('should perform a get request for given url if passed a dictionary', () => {
         let url = 'http://basic.connection';
         let config = {
-            method: 'get',
+            method: Methods.GET,
             url: url
         };
         let text;
@@ -100,7 +101,7 @@ describe('Http', () => {
             expect(chunks).toBe(5);
         });
 
-        it('should call complete when all bytes have been downloaded', function() {
+        it('should call complete when all bytes have been downloaded', () => {
             let url = 'htp://chunk.connection';
             let complete = jasmine.createSpy('complete');
             let config = {
@@ -151,6 +152,9 @@ describe('Http', () => {
             expect(successSpy.calls.count()).toBe(1);
             expect(completeSpy).toHaveBeenCalled();
         });
+
+
+        it('should retry intelligently when provided a function');
     });
 
 
@@ -187,7 +191,7 @@ describe('Http', () => {
         it('should try to load response from cache', () => {
             let url = 'http://cache.me.please';
             let response = new Response({});
-            let subject = new Rx.Subject();
+            let subject = new Rx.Subject<Response>();
             let config = {
                 url: url,
                 cacheGetter: (req) => subject
@@ -203,7 +207,7 @@ describe('Http', () => {
         it('should set connection to done after response received', () => {
             let url = 'http://cache.me.please';
             let response = new Response({});
-            let subject = new Rx.Subject();
+            let subject = new Rx.Subject<Response>();
             let config = {
                 url: url,
                 cacheGetter: (req) => subject
@@ -262,7 +266,7 @@ describe('Http', () => {
 
 
 describe('Connection', () => {
-    describe('.cancel()', function() {
+    describe('.cancel()', () => {
 
     });
 });
@@ -288,7 +292,7 @@ describe('Backend', () => {
 
 
     describe('.getConnectionByUrl()', () => {
-        beforeEach(function() {
+        beforeEach(() => {
             Backend.reset();
         });
 
@@ -306,6 +310,7 @@ describe('Backend', () => {
 
 
         it('should return the connection for url+method combo if method provided', () => {
+
         })
     });
 
