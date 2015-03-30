@@ -54,9 +54,6 @@ export class Connection {
 export class Backend {
     static connections: Map<string, Array<Connection>> = new Map<string, Array<Connection>>();
 
-    constructor() {
-
-    }
     static getConnectionByUrl(url: string): Array<Connection> {
         let connection = Backend.connections && Backend.connections.get(url);
         return connection || [];
@@ -67,13 +64,13 @@ export class Backend {
     }
 
     static verifyNoPendingConnections() {
-        Backend.connections.forEach((l) => {
-            l.forEach((c) => {
-                if (c.readyState !== 4) {
-                    throw new Error(`Connection for ${c.url} has not been resolved`);
-                }
-            });
-        });
+        Backend.connections.
+            forEach(l => l.
+            forEach(c => {
+            if (c.readyState !== 4) {
+                throw new Error(`Connection for ${c.url} has not been resolved`);
+            }
+        }));
     }
 
     static createConnection(config: IConnectionConfig): Connection {
