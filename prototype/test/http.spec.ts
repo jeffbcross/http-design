@@ -1,4 +1,4 @@
-/// <reference path="../public/http.ts"/>
+/// <reference path="../public/bower_components/rxjs/ts/rx.testing.d.ts" />
 declare var describe;
 declare var it;
 declare var expect;
@@ -15,7 +15,9 @@ import {BaseConnectionConfig, ConnectionConfig} from '../public/BaseConnectionCo
 import {Methods} from '../public/Methods';
 import {Response} from '../public/Response';
 import {Request} from '../public/Request';
-import Rx = require('rx');
+import Rx = require('../node_modules/rx/dist/rx');
+require('../node_modules/rx/dist/rx.virtualtime');
+require('../node_modules/rx/dist/rx.testing');
 
 //It's immutable, so we can assign it once
 let baseConnectionConfig = new BaseConnectionConfig({});
@@ -132,6 +134,29 @@ describe('Http', () => {
     });
 
 
+    describe('interval', () => {
+        it('should create new connection at specified interval', () => {
+            let url = 'http://repeatable';
+            let nextSpy = jasmine.createSpy('next');
+            let count = -1;
+            let responses = [new Response({}), new Response({})];
+            let testScheduler = new Rx.TestScheduler();
+            let startingTime = testScheduler.clock;
+            let onNext = Rx.ReactiveTest.onNext;
+
+            testScheduler.startWithTiming(() => {
+                return Rx.Observable.interval(250, testScheduler).
+                    map(() => {
+                        return url;
+                    }).flatMap(http);
+            }, 0, 0, 760);
+            let connections = Backend.getConnectionByUrl(url);
+            expect(connections.length).toBe(3);
+            Backend.reset();
+        });
+    });
+
+
     describe('retry', () => {
         it('should try the connection specified number of times on errors', () => {
             let url = 'http://flaky.url';
@@ -154,7 +179,7 @@ describe('Http', () => {
         });
 
 
-        it('should retry intelligently when provided a function');
+        it('should retry intelligently when provided a function', () => {});
     });
 
 
@@ -167,7 +192,7 @@ describe('Http', () => {
     describe('caching', () => {
         afterEach(Backend.reset);
 
-        it('should set response to cache setter', (done) => {
+        it('should set response to cache setter', () => {
             let req, res;
             let url = 'http://cache.me.plz';
             let request = new Request(url);
@@ -181,7 +206,6 @@ describe('Http', () => {
             let response = new Response({});
             http(config).subscribe(() => {
                 expect(config.cacheSetter).toHaveBeenCalledWith(request, response);
-                done();
             });
             let connection = Backend.getConnectionByUrl(url)[0];
             connection.mockRespond(response);
