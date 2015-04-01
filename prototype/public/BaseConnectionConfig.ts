@@ -1,7 +1,7 @@
 import {IConnectionConfig} from './IConnection';
+import {Methods} from './Methods';
 import {Request} from './Request';
 import {Response} from './Response';
-import {Methods} from './Methods';
 import Rx = require('rx');
 
 export class ConnectionConfig implements IConnectionConfig {
