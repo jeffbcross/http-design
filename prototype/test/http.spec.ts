@@ -8,6 +8,7 @@ declare var fit;
 declare var fdescribe;
 declare var xit;
 declare var jasmine;
+declare var require;
 
 import {http} from '../public/http';
 import {Backend, Connection} from '../public/MockConnection';
@@ -15,9 +16,9 @@ import {BaseConnectionConfig, ConnectionConfig} from '../public/BaseConnectionCo
 import {Methods} from '../public/Methods';
 import {Response} from '../public/Response';
 import {Request} from '../public/Request';
-import Rx = require('../node_modules/rx/dist/rx');
-require('../node_modules/rx/dist/rx.virtualtime');
-require('../node_modules/rx/dist/rx.testing');
+
+var VirtualTimeScheduler = require('../node_modules/rx/dist/rx.virtualtime.js');
+var Rx = require('../node_modules/rx/dist/rx.testing.js');
 
 //It's immutable, so we can assign it once
 let baseConnectionConfig = new BaseConnectionConfig({});
@@ -140,8 +141,7 @@ describe('Http', () => {
             let nextSpy = jasmine.createSpy('next');
             let count = -1;
             let responses = [new Response({}), new Response({})];
-            let testScheduler = new Rx.TestScheduler();
-            let startingTime = testScheduler.clock;
+            let testScheduler = new Rx.TestScheduler(VirtualTimeScheduler);
             let onNext = Rx.ReactiveTest.onNext;
 
             testScheduler.startWithTiming(() => {
