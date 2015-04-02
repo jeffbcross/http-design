@@ -1,4 +1,4 @@
-/// <reference path="bower_components/rxjs/ts/rx.all.d.ts" />
+/// <reference path="../node_modules/rx/ts/rx.all.d.ts" />
 import {Response} from './Response';
 import {Request} from './Request';
 import {Methods} from './Methods';

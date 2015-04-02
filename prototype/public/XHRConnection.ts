@@ -1,4 +1,4 @@
-/// <reference path="bower_components/rxjs/ts/rx.all.d.ts" />
+/// <reference path="../node_modules/rx/ts/rx.all.d.ts" />
 import {IConnectionBackend, IConnection, IConnectionConfig} from './IConnection';
 import {ReadyStates} from './ReadyStates';
 import {Response} from './Response';

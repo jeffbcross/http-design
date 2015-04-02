@@ -17,7 +17,6 @@ import Rx = require('rx');
  *
  **/
 //import {Backend} from './XHRConnection';
-
 export function http(config: string|IConnectionConfig) {
     // Eventually the config will already be instantiated and just injected/merged.
     let baseConnection = new BaseConnectionConfig({});

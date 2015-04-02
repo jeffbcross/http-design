@@ -1,4 +1,4 @@
-/// <reference path="../public/bower_components/rxjs/ts/rx.testing.d.ts" />
+/// <reference path="../node_modules/rx/ts/rx.all.d.ts" />
 declare var describe;
 declare var it;
 declare var expect;
