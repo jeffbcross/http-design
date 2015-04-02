@@ -215,7 +215,7 @@ describe('Http', () => {
         it('should try to load response from cache', () => {
             let url = 'http://cache.me.please';
             let response = new Response({});
-            let subject = new Rx.Subject<Response>();
+            let subject: Rx.Subject<Response> = new Rx.Subject();
             let config = {
                 url: url,
                 cacheGetter: (req) => subject
@@ -231,7 +231,7 @@ describe('Http', () => {
         it('should set connection to done after response received', () => {
             let url = 'http://cache.me.please';
             let response = new Response({});
-            let subject = new Rx.Subject<Response>();
+            let subject: Rx.Subject<Response> = new Rx.Subject();
             let config = {
                 url: url,
                 cacheGetter: (req) => subject
