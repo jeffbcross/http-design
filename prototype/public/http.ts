@@ -20,12 +20,13 @@ import Immutable = require('immutable');
 //import {Backend} from './XHRConnection';
 export function http(config: string|Object) {
     // If just passed in a url, create a fully-qualified config based on base.
-    let configMap: Immutable.Map<any, any> = typeof config === 'string' ?
+    let configMap: Immutable.Map<string, string|boolean|Methods> = typeof config === 'string' ?
         Immutable.Map({ method: Methods.GET, url: config }) :
         Immutable.Map(config);
 
     return Rx.Observable.create((observer) => {
         let connection = Backend.createConnection(configMap);
-        connection.send(configMap.get('request')).subscribe(observer);
+        let request = new Request(configMap.get('url'));
+        connection.send(request).subscribe(observer);
     });
 }

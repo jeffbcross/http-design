@@ -166,7 +166,6 @@ describe('Http', () => {
                 retry(2).
                 subscribe(successSpy, errorSpy, completeSpy);
             let connections = Backend.getConnectionByUrl(url);
-            console.log('length', connections.length)
             expect(connections.length).toBe(1);
             let connection = connections.pop();
             connection.mockError();
@@ -259,7 +258,6 @@ describe('Http', () => {
             };
             http(config).publish().connect();
             let connection = Backend.getConnectionByUrl(url)[0];
-            console.log('sends', connection.mockSends);
             expect(connection.mockSends[0].data).toBe('somedata');
         });
 
