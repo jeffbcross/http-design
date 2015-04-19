@@ -3,9 +3,6 @@ import {Methods} from './Methods';
 import {ReadyStates} from './ReadyStates';
 import {Request} from './Request';
 import {Response} from './Response';
-
-
-
 import Rx = require('rx');
 
 /**
@@ -29,26 +26,24 @@ export class Connection {
     readyState: ReadyStates;
     request: Request;
     url: string;
-    constructor({
-        url,
-        downloadObserver,
-        method
-    }: IConnectionConfig) {
-        if (!url) throw new Error(`url is required to create a connection`);
-        this.url = url;
-        this.downloadObserver = downloadObserver;
-        this.method = method;
+
+    constructor(config) {
+
+        if (!config.get('url')) throw new Error(`url is required to create a connection`);
+        this.url = config.get('url');
+        this.downloadObserver = config.get('downloadObserver');
+        this.method = config.get('method');
 
         // TODO: move this burden to Http. Makes no sense here.
-        this.request = new Request(url);
+        this.request = new Request(this.url);
 
         // State
         this.mockSends = [];
         this.mockResponses = new Rx.Subject<Response>();
         this.readyState = ReadyStates.OPEN;
-        let connections = Backend.connections.get(url) || [];
+        let connections = Backend.connections.get(this.url) || [];
         connections.push(this);
-        Backend.connections.set(url, connections);
+        Backend.connections.set(this.url, connections);
     }
 
     send(req: Request): Rx.Observable<Response> {
