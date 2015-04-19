@@ -12,7 +12,7 @@ declare var jasmine;
 declare var require;
 
 import {Http} from '../public/http';
-import {Backend, Connection} from '../public/MockConnection';
+import {Backend} from '../public/MockConnection';
 import {BaseConnectionConfig, ConnectionConfig} from '../public/BaseConnectionConfig';
 import {Methods} from '../public/Methods';
 import {Response} from '../public/Response';
@@ -40,7 +40,7 @@ describe('Http', () => {
         backend.reset();
     });
 
-    fit('should perform a get request for given url if only passed a string', () => {
+    it('should perform a get request for given url if only passed a string', () => {
         let url = 'http://basic.connection';
         let text;
         http(url).subscribe((res: Response) => {
@@ -60,7 +60,7 @@ describe('Http', () => {
         http(config).subscribe((res: Response) => {
             text = res.responseText;
         });
-        let connections = Backend.getConnectionByUrl(url);
+        let connections = backend.getConnectionByUrl(url);
         let connection = connections[0];
         connection.mockRespond(baseResponse);
         expect(text).toBe('base response');
@@ -77,14 +77,14 @@ describe('Http', () => {
         http(config).subscribe((res: Response) => {
             text = res.responseText;
         });
-        let connections = Backend.getConnectionByUrl(url);
+        let connections = backend.getConnectionByUrl(url);
         let connection = connections[0];
         connection.mockRespond(baseResponse);
         expect(text).toBe('base response');
     });
 
 
-    describe('downloadObserver', () => {
+    xdescribe('downloadObserver', () => {
         afterEach(Backend.reset);
 
         it('should report download progress to the observer', () => {
@@ -130,14 +130,14 @@ describe('Http', () => {
         });
     });
 
-    describe('uploadObserver', () => {
+    xdescribe('uploadObserver', () => {
     });
 
-    describe('stateObserver', () => {
+    xdescribe('stateObserver', () => {
     });
 
 
-    describe('Response', () => {
+    xdescribe('Response', () => {
     });
 
 
@@ -189,7 +189,7 @@ describe('Http', () => {
     });
 
 
-    describe('abort', () => {
+    xdescribe('abort', () => {
         it('should call cancel on the connection', () => {
         })
     });
@@ -289,20 +289,20 @@ describe('Http', () => {
     });
 
 
-    describe('data types', () => {
+    xdescribe('data types', () => {
 
     });
 });
 
 
-describe('Connection', () => {
+xdescribe('Connection', () => {
     describe('.cancel()', () => {
 
     });
 });
 
 
-describe('Backend', () => {
+xdescribe('Backend', () => {
     let url = 'https://foo.bar';
     let observer: Rx.Observer<any>;
     let connection: Connection;
@@ -368,7 +368,7 @@ describe('Backend', () => {
 });
 
 
-describe('BaseConnectionConfig', () => {
+xdescribe('BaseConnectionConfig', () => {
     it('should create a new object when setting new resues', () => {
     });
 });

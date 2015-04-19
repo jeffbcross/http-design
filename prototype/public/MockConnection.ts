@@ -16,11 +16,11 @@ var di = require('di');
  **/
 export function ConnectionFactory (backend) {
     return function () {
-        return new ConnectionBuilder(backend);
+        return new Connection(backend);
     }
 }
 
-class ConnectionBuilder {
+class Connection {
     /**
      * Observer to call on download progress, if provided in config.
      **/
@@ -79,12 +79,12 @@ class ConnectionBuilder {
 
 
 export class Backend {
+    requests: Map<string, Array<Connection>>;
     constructor() {
-
+        this.requests = new Map<string, Array<Connection>>();
     }
-    requests: Map<string, Array<ConnectionBuilder>> = new Map<string, Array<ConnectionBuilder>>();
 
-    getConnectionByUrl(url: string): Array<ConnectionBuilder> {
+    getConnectionByUrl(url: string): Array<Connection> {
         let connection = this.requests && this.requests.get(url);
         return connection || [];
     }
