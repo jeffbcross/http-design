@@ -11,7 +11,7 @@ declare var xdescribe;
 declare var jasmine;
 declare var require;
 
-import {http} from '../public/http';
+import {Http} from '../public/http';
 import {Backend, Connection} from '../public/MockConnection';
 import {BaseConnectionConfig, ConnectionConfig} from '../public/BaseConnectionConfig';
 import {Methods} from '../public/Methods';
@@ -20,25 +20,33 @@ import {Request} from '../public/Request';
 
 var VirtualTimeScheduler = require('../node_modules/rx/dist/rx.virtualtime.js');
 var Rx = require('../node_modules/rx/dist/rx.testing.js');
+var di = require('di');
 
 describe('Http', () => {
     let baseResponse;
+    let backend;
+    let injector;
+    let http;
+
     beforeEach(() => {
+        injector = new di.Injector();
+        backend = injector.get(Backend);
+        http = injector.get(Http);
         baseResponse = new Response({responseText:'base response'});
     });
 
     afterEach(() => {
-        Backend.verifyNoPendingConnections();
-        Backend.reset();
+        backend.verifyNoPendingRequests();
+        backend.reset();
     });
 
-    it('should perform a get request for given url if only passed a string', () => {
+    fit('should perform a get request for given url if only passed a string', () => {
         let url = 'http://basic.connection';
         let text;
         http(url).subscribe((res: Response) => {
             text = res.responseText;
         });
-        let connections = Backend.getConnectionByUrl(url);
+        let connections = backend.getConnectionByUrl(url);
         let connection = connections[0];
         connection.mockRespond(baseResponse);
         expect(text).toBe('base response');
