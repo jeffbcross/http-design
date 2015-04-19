@@ -1,4 +1,4 @@
-node ../tsc/tsc.js test/http.spec.ts public/http.ts public/BaseConnectionConfig.ts -t ES5 --module commonjs -w & pid1=$!
+./node_modules/.bin/tsc test/http.spec.ts public/http.ts public/BaseConnectionConfig.ts -t ES5 --module commonjs -w & pid1=$!
 
 function killAndExit () {
   kill $pid1
