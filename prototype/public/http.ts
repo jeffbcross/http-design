@@ -25,17 +25,17 @@ var di = require('di');
 export function Http (Connection) {
     return function http(config: string|Object) {
         // If just passed in a url, create a fully-qualified config based on base.
-        let newConfig;
+        let configMap:Immutable.Map<string,any>;
         if (typeof config === 'string') {
-            newConfig = BaseConnectionConfig.merge({ method: Methods.GET, url: config });
+            configMap = Immutable.fromJS({ method: Methods.GET, url: config });
         } else {
-            newConfig = BaseConnectionConfig.merge(Immutable.fromJS(config));
+            configMap = Immutable.fromJS(config);
         }
+        configMap = BaseConnectionConfig.merge(configMap);
 
         return Rx.Observable.create((observer) => {
             let connection = new Connection();
-            //TODO: just pass the whole friggin object
-            let request = new Request(newConfig);
+            let request = new Request(configMap);
             connection.send(request).subscribe(observer);
         });
     }
