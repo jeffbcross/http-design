@@ -19,7 +19,7 @@ export class ConnectionConfig implements IConnectionConfig {
     }
 }
 
-export var BaseConnectionConfig: Immutable.Map<any, any> = new Immutable.Map({
+export var BaseConnectionConfig: Immutable.Map<any, any> = Immutable.Map({
   method: Methods.GET,
   url: null,
   downloadObserver: null,

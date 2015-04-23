@@ -75,7 +75,7 @@ describe('Http', () => {
 
 
     xdescribe('downloadObserver', () => {
-        afterEach(Backend.reset);
+        afterEach(backend.reset);
 
         it('should report download progress to the observer', () => {
             let url = 'http://chunk.connection';
@@ -87,7 +87,7 @@ describe('Http', () => {
                 })
             }
             http(config).publish().connect();
-            let connections = Backend.getConnectionByUrl(url);
+            let connections = backend.getConnectionByUrl(url);
             let connection = connections[0];
             let response = new Response({});
             response.totalBytes = 100;
@@ -108,7 +108,7 @@ describe('Http', () => {
                 downloadObserver: Rx.Observer.create(() => { }, () => { }, complete)
             }
             http(config).publish().connect();
-            let connections = Backend.getConnectionByUrl(url);
+            let connections = backend.getConnectionByUrl(url);
             let connection = connections[0];
             let response = new Response({});
             response.totalBytes = 100;
@@ -146,9 +146,9 @@ describe('Http', () => {
                         return url;
                     }).flatMap(http);
             }, 0, 0, 760);
-            let connections = Backend.getConnectionByUrl(url);
+            let connections = backend.getConnectionByUrl(url);
             expect(connections.length).toBe(3);
-            Backend.reset();
+            backend.reset();
         });
     });
 
@@ -163,7 +163,7 @@ describe('Http', () => {
             http(url).
                 retry(2).
                 subscribe(successSpy, errorSpy, completeSpy);
-            let connections = Backend.getConnectionByUrl(url);
+            let connections = backend.getConnectionByUrl(url);
             expect(connections.length).toBe(1);
             let connection = connections.pop();
             connection.mockError();
@@ -186,7 +186,7 @@ describe('Http', () => {
 
 
     xdescribe('caching', () => {
-        afterEach(Backend.reset);
+        afterEach(backend.reset);
 
         it('should set response to cache setter', () => {
             let req, res;
@@ -203,7 +203,7 @@ describe('Http', () => {
             http(config).subscribe(() => {
                 expect(config.cacheSetter).toHaveBeenCalledWith(request, response);
             });
-            let connection = Backend.getConnectionByUrl(url)[0];
+            let connection = backend.getConnectionByUrl(url)[0];
             connection.mockRespond(response);
         });
 
@@ -235,7 +235,7 @@ describe('Http', () => {
             let finalRes;
             http(config).
                 subscribe(res => finalRes = res);
-            let connection = Backend.getConnectionByUrl(url)[0];
+            let connection = backend.getConnectionByUrl(url)[0];
             expect(connection.readyState).toBe(1);
             subject.onNext(response);
             expect(connection.readyState).toBe(4);
@@ -244,7 +244,7 @@ describe('Http', () => {
 
 
     xdescribe('transformation', () => {
-        afterEach(Backend.reset);
+        afterEach(backend.reset);
 
         it('should apply request transformations prior to sending', () => {
             let url = 'http://transform.me';
@@ -255,7 +255,7 @@ describe('Http', () => {
                 }
             };
             http(config).publish().connect();
-            let connection = Backend.getConnectionByUrl(url)[0];
+            let connection = backend.getConnectionByUrl(url)[0];
             expect(connection.mockSends[0].data).toBe('somedata');
         });
 
@@ -272,7 +272,7 @@ describe('Http', () => {
             http(config).subscribe(res => {
                 txt = res.responseText;
             });
-            let connection = Backend.getConnectionByUrl(url)[0];
+            let connection = backend.getConnectionByUrl(url)[0];
             connection.mockRespond(new Response({responseText:'no data'}));
             expect(txt).toBe('somedata');
         });
