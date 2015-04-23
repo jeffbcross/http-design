@@ -1,15 +1,5 @@
 /// <reference path="../node_modules/rx/ts/rx.all.d.ts" />
-declare var describe;
-declare var it;
-declare var expect;
-declare var beforeEach;
-declare var afterEach;
-declare var fit;
-declare var fdescribe;
-declare var xit;
-declare var xdescribe;
-declare var jasmine;
-declare var require;
+/// <reference path="shared-declarations.d.ts" />
 
 import {Http} from '../public/http';
 import {Backend} from '../public/MockConnection';
@@ -299,72 +289,6 @@ xdescribe('Connection', () => {
     describe('.cancel()', () => {
 
     });
-});
-
-
-xdescribe('Backend', () => {
-    let url = 'https://foo.bar';
-    let observer: Rx.Observer<any>;
-    let connection: Connection;
-
-    beforeEach(() => {
-        observer = Rx.Observer.create(() => { }, () => { }, () => { });
-        let config = BaseConnectionConfig.merge({ url: url });
-        connection = new Connection(config);
-    });
-    beforeEach(Backend.reset);
-
-
-    afterEach(() => {
-        Backend.verifyNoPendingConnections();
-        Backend.reset();
-    });
-
-
-    describe('.getConnectionByUrl()', () => {
-        beforeEach(() => {
-            Backend.reset();
-        });
-
-        it('should return null if no connection for given url', () => {
-            expect(Backend.getConnectionByUrl('foo')).toEqual([]);
-        });
-
-
-        it('should return the connection if one exists for given url', () => {
-            expect(Backend.connections.size).toBe(0);
-            Backend.connections.set(url, [connection]);
-            expect(Backend.getConnectionByUrl(url)[0] instanceof Connection).toBe(true);
-            connection.readyState = 4;
-        });
-
-
-        it('should return the connection for url+method combo if method provided', () => {
-
-        })
-    });
-
-
-    describe('.reset()', () => {
-        it('should clear all connections', () => {
-            expect(Backend.connections.size).toBe(0);
-            Backend.connections.set(url, [connection]);
-            expect(Backend.connections.size).toBe(1);
-            Backend.reset();
-            expect(Backend.connections.size).toBe(0);
-        });
-    });
-
-
-    describe('.verifyNoPendingConnections()', () => {
-        it('should throw if any connection does not have a complete readystate', () => {
-            Backend.connections.set(url, [connection]);
-            expect(Backend.verifyNoPendingConnections).toThrow(
-                new Error(`Connection for ${url} has not been resolved`));
-            connection.readyState = 4;
-            expect(Backend.verifyNoPendingConnections).not.toThrow();
-        });
-    })
 });
 
 

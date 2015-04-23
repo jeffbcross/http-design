@@ -20,7 +20,7 @@ export function ConnectionFactory (backend) {
     }
 }
 
-class Connection {
+export class Connection {
     /**
      * Observer to call on download progress, if provided in config.
      **/
@@ -35,6 +35,7 @@ class Connection {
     mockSends: Array<Request>;
     readyState: ReadyStates;
     backend: Backend;
+    url: string;
 
     constructor(backend:Backend) {
         // State
@@ -82,6 +83,7 @@ export class Backend {
     requests: Map<string, Array<Connection>>;
     constructor() {
         this.requests = new Map<string, Array<Connection>>();
+        this.verifyNoPendingRequests = this.verifyNoPendingRequests.bind(this);
     }
 
     getConnectionByUrl(url: string): Array<Connection> {
@@ -96,9 +98,9 @@ export class Backend {
     verifyNoPendingRequests() {
         this.requests.
             forEach(l => l.
-                forEach(c => {
-                    if (c.readyState !== 4) {
-                        throw new Error(`Connection has not been resolved`);
+                forEach(connection => {
+                    if (connection.readyState !== 4) {
+                        throw new Error(`Request for ${connection.url} has not been resolved`);
                     }
                 }));
     }
