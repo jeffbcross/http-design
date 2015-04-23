@@ -35,7 +35,7 @@ export function Http (Connection) {
         return Rx.Observable.create((observer) => {
             let connection = new Connection();
             //TODO: just pass the whole friggin object
-            let request = new Request(newConfig.get('url'));
+            let request = new Request(newConfig);
             connection.send(request).subscribe(observer);
         });
     }

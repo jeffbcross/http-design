@@ -185,20 +185,18 @@ describe('Http', () => {
     });
 
 
-    xdescribe('caching', () => {
+    /*xdescribe('caching', () => {
         afterEach(backend.reset);
 
         it('should set response to cache setter', () => {
             let req, res;
             let url = 'http://cache.me.plz';
-            let request = new Request(url);
-            let config = {
+
+            let config = BaseConnectionConfig.merge({
                 url: url,
-                requestTransformer: (req) => {
-                    return Rx.Observable.just(request);
-                },
                 cacheSetter: jasmine.createSpy()
-            }
+            });
+            let request = new Request(config);
             let response = new Response({});
             http(config).subscribe(() => {
                 expect(config.cacheSetter).toHaveBeenCalledWith(request, response);
@@ -281,7 +279,7 @@ describe('Http', () => {
 
     xdescribe('data types', () => {
 
-    });
+    });*/
 });
 
 
