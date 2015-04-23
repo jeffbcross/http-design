@@ -2,14 +2,5 @@ prototype/bundle.js
 prototype/node_modules/
 prototype/public/bower_components/
 
-prototype/public/BaseConnectionConfig.js
-prototype/public/IConnection.js
-prototype/public/Methods.js
-prototype/public/MockConnection.js
-prototype/public/ReadyStates.js
-prototype/public/Request.js
-prototype/public/Response.js
-prototype/public/XHRConnection.js
-prototype/public/http.js
-prototype/test/http.spec.js
-
+prototype/public/*.js
+prototype/test/*.js
