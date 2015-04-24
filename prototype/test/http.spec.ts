@@ -36,7 +36,7 @@ describe('Http', () => {
         http(url).subscribe((res: Response) => {
             text = res.responseText;
         });
-        let connections = backend.getConnectionByUrl(url);
+        let connections = backend.getConnectionsByUrl(url);
         let connection = connections[0];
         connection.mockRespond(baseResponse);
         expect(text).toBe('base response');
@@ -50,7 +50,7 @@ describe('Http', () => {
         http(config).subscribe((res: Response) => {
             text = res.responseText;
         });
-        let connections = backend.getConnectionByUrl(url);
+        let connections = backend.getConnectionsByUrl(url);
         let connection = connections[0];
         connection.mockRespond(baseResponse);
         expect(text).toBe('base response');
@@ -67,7 +67,7 @@ describe('Http', () => {
         http(config).subscribe((res: Response) => {
             text = res.responseText;
         });
-        let connections = backend.getConnectionByUrl(url);
+        let connections = backend.getConnectionsByUrl(url);
         let connection = connections[0];
         connection.mockRespond(baseResponse);
         expect(text).toBe('base response');
@@ -87,7 +87,7 @@ describe('Http', () => {
                 })
             }
             http(config).publish().connect();
-            let connections = backend.getConnectionByUrl(url);
+            let connections = backend.getConnectionsByUrl(url);
             let connection = connections[0];
             let response = new Response({});
             response.totalBytes = 100;
@@ -108,7 +108,7 @@ describe('Http', () => {
                 downloadObserver: Rx.Observer.create(() => { }, () => { }, complete)
             }
             http(config).publish().connect();
-            let connections = backend.getConnectionByUrl(url);
+            let connections = backend.getConnectionsByUrl(url);
             let connection = connections[0];
             let response = new Response({});
             response.totalBytes = 100;
@@ -146,7 +146,7 @@ describe('Http', () => {
                         return url;
                     }).flatMap(http);
             }, 0, 0, 760);
-            let connections = backend.getConnectionByUrl(url);
+            let connections = backend.getConnectionsByUrl(url);
             expect(connections.length).toBe(3);
             backend.reset();
         });
@@ -163,7 +163,7 @@ describe('Http', () => {
             http(url).
                 retry(2).
                 subscribe(successSpy, errorSpy, completeSpy);
-            let connections = backend.getConnectionByUrl(url);
+            let connections = backend.getConnectionsByUrl(url);
             expect(connections.length).toBe(1);
             let connection = connections.pop();
             connection.mockError();
@@ -201,7 +201,7 @@ describe('Http', () => {
             http(config).subscribe(() => {
                 expect(config.cacheSetter).toHaveBeenCalledWith(request, response);
             });
-            let connection = backend.getConnectionByUrl(url)[0];
+            let connection = backend.getConnectionsByUrl(url)[0];
             connection.mockRespond(response);
         });
 
@@ -233,7 +233,7 @@ describe('Http', () => {
             let finalRes;
             http(config).
                 subscribe(res => finalRes = res);
-            let connection = backend.getConnectionByUrl(url)[0];
+            let connection = backend.getConnectionsByUrl(url)[0];
             expect(connection.readyState).toBe(1);
             subject.onNext(response);
             expect(connection.readyState).toBe(4);
@@ -253,7 +253,7 @@ describe('Http', () => {
                 }
             };
             http(config).publish().connect();
-            let connection = backend.getConnectionByUrl(url)[0];
+            let connection = backend.getConnectionsByUrl(url)[0];
             expect(connection.mockSends[0].data).toBe('somedata');
         });
 
@@ -270,7 +270,7 @@ describe('Http', () => {
             http(config).subscribe(res => {
                 txt = res.responseText;
             });
-            let connection = backend.getConnectionByUrl(url)[0];
+            let connection = backend.getConnectionsByUrl(url)[0];
             connection.mockRespond(new Response({responseText:'no data'}));
             expect(txt).toBe('somedata');
         });

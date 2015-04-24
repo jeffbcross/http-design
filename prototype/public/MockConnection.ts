@@ -11,12 +11,14 @@ var di = require('di');
 
 /**
  * Connection represents a request and response for an underlying transport, like XHR or mock.
- * The mock implementation contains helper methods to respond to requests within tests.
+ * The mock implementation contains helper methods to respond to connections within tests.
  * API subject to change and expand.
  **/
 export function ConnectionFactory (backend) {
     return function () {
-        return new Connection(backend);
+        let connection = new Connection(backend);
+        backend.connections.push(connection);
+        return connection;
     }
 }
 
@@ -31,26 +33,21 @@ export class Connection {
      * Name `readyState` should change to be more generic, and states could be made to be more
      * descriptive than XHR states.
      **/
-    mockResponses: Rx.Subject<Response>;
-    mockSends: Array<Request>;
+
     readyState: ReadyStates;
     backend: Backend;
-    url: string;
+    request: Request;
+    response: Rx.ReplaySubject<Response>;
 
-    constructor(backend:Backend) {
+    constructor(req: Request) {
         // State
-        this.mockSends = [];
-        this.mockResponses = new Rx.Subject<Response>();
+        this.response = new Rx.ReplaySubject<Response>();
         this.readyState = ReadyStates.OPEN;
-        this.backend = backend;
+        this.request = req;
     }
 
-    send(req: Request): Rx.Observable<Response> {
-        this.mockSends.push(req);
-        let requests = this.backend.requests.get(req.url) || [];
-        requests.push(this);
-        this.backend.requests.set(req.url, requests);
-        return this.mockResponses;
+    send(): Rx.ReplaySubject<Response> {
+        return this.response;
     }
 
     /**
@@ -58,8 +55,8 @@ export class Connection {
      **/
     mockRespond(res: Response) {
         this.readyState = ReadyStates.DONE;
-        this.mockResponses.onNext(res);
-        this.mockResponses.onCompleted();
+        this.response.onNext(res);
+        this.response.onCompleted();
     }
 
     mockDownload(res: Response) {
@@ -72,37 +69,32 @@ export class Connection {
     mockError(err?) {
         //Matches XHR semantics
         this.readyState = ReadyStates.DONE;
-        this.mockResponses.onError(err);
-        this.mockResponses.onCompleted();
+        this.response.onError(err);
+        this.response.onCompleted();
     }
 }
 
 
 
 export class Backend {
-    requests: Map<string, Array<Connection>>;
+    connections: Rx.ReplaySubject<Connection>;
+    pendingConnections: Rx.Observable<Connection>;
     constructor() {
-        this.requests = new Map<string, Array<Connection>>();
-        this.verifyNoPendingRequests = this.verifyNoPendingRequests.bind(this);
-    }
-
-    getConnectionByUrl(url: string): Array<Connection> {
-        let connection = this.requests && this.requests.get(url);
-        return connection || [];
-    }
-
-    reset() {
-        this.requests.clear();
+        this.connections = new Rx.ReplaySubject<Connection>();
+        this.pendingConnections = this.connections.filter((c) => c.readyState !== 4)
     }
 
     verifyNoPendingRequests() {
-        this.requests.
-            forEach(l => l.
-                forEach(connection => {
-                    if (connection.readyState !== 4) {
-                        throw new Error(`Request for ${connection.url} has not been resolved`);
-                    }
-                }));
+
+    }
+
+    createConnection (req: Request) {
+        if (!req || !(req instanceof Request)) {
+            throw new Error(`createConnection requires an instance of Request, got ${req}`);
+        }
+        let connection = new Connection(req);
+        this.connections.onNext(connection);
+        return connection;
     }
 }
 

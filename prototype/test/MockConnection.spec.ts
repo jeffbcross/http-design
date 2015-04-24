@@ -1,5 +1,9 @@
 /// <reference path="../node_modules/rx/ts/rx.all.d.ts" />
 /// <reference path="shared-declarations.d.ts" />
+
+declare var fdescribe;
+declare var xdescribe;
+
 import {Http} from '../public/http';
 import {Connection, Backend} from '../public/MockConnection';
 import {BaseConnectionConfig, ConnectionConfig} from '../public/BaseConnectionConfig';
@@ -11,72 +15,95 @@ var VirtualTimeScheduler = require('../node_modules/rx/dist/rx.virtualtime.js');
 var Rx = require('../node_modules/rx/dist/rx.testing.js');
 var di = require('di');
 
-describe('MockConnection', () => {
+fdescribe('MockConnection', () => {
     let url = 'https://foo.bar';
-    let observer: Rx.Observer<any>;
-    let connection: Connection;
     let injector;
-    let backend;
+    let backend:Backend;
+    let req: Request;
+    let config;
 
     beforeEach(() => {
-        observer = Rx.Observer.create(() => { }, () => { }, () => { });
-        let config = BaseConnectionConfig.merge({ url: url });
+        config = BaseConnectionConfig.merge({ url: url });
+        req = new Request(config);
 
         injector = new di.Injector();
-        connection = injector.get(Connection);
         backend = injector.get(Backend);
     });
 
 
-    afterEach(() => {
-        //backend.verifyNoPendingRequests();
-        backend.reset();
+    afterEach((done) => {
+        let pending = 0;
+        backend.pendingConnections.subscribe((c) => pending++);
+        done();
     });
 
 
-    describe('.getConnectionByUrl()', () => {
-        beforeEach(() => {
-            backend.reset();
-        });
+    describe('connection inspection', () => {
+        it('should provide unresolved connections in pendingConnections observable', () => {
+            let pending = 0;
+            let connectionGood = backend.createConnection(req);
+            let requestBad = new Request(config);
+            let connectionBad = backend.createConnection(requestBad);
+            connectionGood.readyState = 4;
+            connectionBad.readyState = 0;
 
-        it('should return null if no connection for given url', () => {
-            expect(backend.getConnectionByUrl('foo')).toEqual([]);
-        });
-
-
-        it('should return the connection if one exists for given url', () => {
-            expect(backend.requests.size).toBe(0);
-            backend.requests.set(url, [connection]);
-            expect(backend.getConnectionByUrl(url)[0] instanceof Connection).toBe(true);
-            connection.readyState = 4;
+            backend.pendingConnections.subscribe(() => pending++);
+            expect(pending).toBe(1);
         });
 
 
-        it('should return the connection for url+method combo if method provided', () => {
+        it('should be possible to see which connections resulted in an error', () => {
+            let count = 0;
 
-        })
+            let connectionBad = backend.createConnection(req);
+            let errorResponse = new Response({});
+            errorResponse.type = 'error';
+            connectionBad.response.onNext(errorResponse);
+
+            let connectionGood = backend.createConnection(req);
+            let response = new Response({responseText: 'good response'});
+            connectionBad.response.onNext(response);
+
+            backend.connections.
+                concatMap((c) => {
+                    let responseObservable: Rx.Subject<Response> = c.response;
+                    return responseObservable;
+                }).
+                filter(r => r.type === 'error').
+                subscribe(r => count++);
+
+
+            expect(count).toBe(1);
+        });
     });
 
 
-    describe('.reset()', () => {
-        it('should clear all connections', () => {
-            expect(backend.requests.size).toBe(0);
-            backend.requests.set(url, [connection]);
-            expect(backend.requests.size).toBe(1);
-            backend.reset();
-            expect(backend.requests.size).toBe(0);
+    describe('.createConnection()', () => {
+        it('should create a connection', () => {
+            let connection = backend.createConnection(req);
+            expect(connection instanceof Connection).toBe(true);
+        });
+
+
+        it('should add the connection to backend.connections', () => {
+            let count = 0;
+            let nextSpy = jasmine.createSpy('onNext');
+
+            let subscription = backend.connections.subscribe((obs) => {
+                count++;
+                nextSpy(obs);
+            });
+
+            backend.createConnection(req);
+            expect(nextSpy).toHaveBeenCalled();
+            expect(count).toBe(1);
+        });
+
+
+        it('should throw if not provided a request', () => {
+            expect(
+                backend.createConnection
+            ).toThrow(new Error('createConnection requires an instance of Request, got undefined'));
         });
     });
-
-
-    describe('.verifyNoPendingRequests()', () => {
-        it('should throw if any connection does not have a complete readystate', () => {
-            connection.url = url;
-            backend.requests.set(url, [connection]);
-            expect(backend.verifyNoPendingRequests).toThrow(
-                new Error(`Request for ${url} has not been resolved`));
-            connection.readyState = 4;
-            expect(backend.verifyNoPendingRequests).not.toThrow();
-        });
-    })
 });

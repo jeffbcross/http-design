@@ -4,6 +4,7 @@ export interface IResponse {
     totalBytes?: number;
     previousBytes?: number;
     fromCache?: boolean;
+    type?: string; //TODO: enum based on https://fetch.spec.whatwg.org/#responses
 }
 
 export class Response {
@@ -12,6 +13,7 @@ export class Response {
     totalBytes: number;
     previousBytes: number;
     fromCache: boolean;
+    type: string;
     constructor({
         responseText = '',
         fromCache = false
