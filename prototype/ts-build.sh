@@ -7,4 +7,4 @@ function killAndExit () {
 
 trap killAndExit SIGINT SIGTERM
 
-./node_modules/.bin/watchify public/http.js test/*.spec.js node_modules/rx/index.js -o bundle.js
+./node_modules/.bin/watchify public/http.js test/*.spec.js node_modules/rx/index.js -o bundle.js --debug
