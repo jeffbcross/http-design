@@ -22,7 +22,7 @@ var di = require('di');
  *
  **/
 //import {Backend} from './XHRConnection';
-export function Http (Connection) {
+export function Http (backend) {
     return function http(config: string|Object) {
         // If just passed in a url, create a fully-qualified config based on base.
         let configMap:Immutable.Map<string,any>;
@@ -34,12 +34,13 @@ export function Http (Connection) {
         configMap = BaseConnectionConfig.merge(configMap);
 
         return Rx.Observable.create((observer) => {
-            let connection = new Connection();
             let request = new Request(configMap);
-            connection.send(request).subscribe(observer);
+            let connection = backend.createConnection(request);
+
+            connection.send().subscribe(observer);
         });
     }
 }
 
 
-di.annotate(Http, new di.Inject(ConnectionFactory));
+di.annotate(Http, new di.Inject(Backend));

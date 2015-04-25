@@ -26,18 +26,19 @@ describe('Http', () => {
     });
 
     afterEach(() => {
-        backend.verifyNoPendingRequests();
-        backend.reset();
+        let pending = 0;
+        backend.pendingConnections.subscribe((c) => pending++);
+        expect(pending).toBe(0);
     });
 
     it('should perform a get request for given url if only passed a string', () => {
         let url = 'http://basic.connection';
         let text;
+        let connection;
         http(url).subscribe((res: Response) => {
             text = res.responseText;
         });
-        let connections = backend.getConnectionsByUrl(url);
-        let connection = connections[0];
+        backend.connections.subscribe((c) => connection = c);
         connection.mockRespond(baseResponse);
         expect(text).toBe('base response');
     });
@@ -47,11 +48,11 @@ describe('Http', () => {
         let url = 'http://basic.connection';
         let config = new ConnectionConfig(Methods.GET, url);
         let text;
+        let connection;
         http(config).subscribe((res: Response) => {
             text = res.responseText;
         });
-        let connections = backend.getConnectionsByUrl(url);
-        let connection = connections[0];
+        backend.connections.subscribe((c) => connection = c);
         connection.mockRespond(baseResponse);
         expect(text).toBe('base response');
     });
@@ -59,6 +60,7 @@ describe('Http', () => {
 
     it('should perform a get request for given url if passed a dictionary', () => {
         let url = 'http://basic.connection';
+        let connection;
         let config = {
             method: Methods.GET,
             url: url
@@ -67,15 +69,13 @@ describe('Http', () => {
         http(config).subscribe((res: Response) => {
             text = res.responseText;
         });
-        let connections = backend.getConnectionsByUrl(url);
-        let connection = connections[0];
+        backend.connections.subscribe((c) => connection = c);
         connection.mockRespond(baseResponse);
         expect(text).toBe('base response');
     });
 
 
     xdescribe('downloadObserver', () => {
-        afterEach(backend.reset);
 
         it('should report download progress to the observer', () => {
             let url = 'http://chunk.connection';
@@ -148,7 +148,6 @@ describe('Http', () => {
             }, 0, 0, 760);
             let connections = backend.getConnectionsByUrl(url);
             expect(connections.length).toBe(3);
-            backend.reset();
         });
     });
 
@@ -186,7 +185,6 @@ describe('Http', () => {
 
 
     /*xdescribe('caching', () => {
-        afterEach(backend.reset);
 
         it('should set response to cache setter', () => {
             let req, res;
@@ -242,7 +240,6 @@ describe('Http', () => {
 
 
     xdescribe('transformation', () => {
-        afterEach(backend.reset);
 
         it('should apply request transformations prior to sending', () => {
             let url = 'http://transform.me';

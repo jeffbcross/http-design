@@ -15,7 +15,7 @@ var VirtualTimeScheduler = require('../node_modules/rx/dist/rx.virtualtime.js');
 var Rx = require('../node_modules/rx/dist/rx.testing.js');
 var di = require('di');
 
-fdescribe('MockConnection', () => {
+describe('MockConnection', () => {
     let url = 'https://foo.bar';
     let injector;
     let backend:Backend;
@@ -28,13 +28,6 @@ fdescribe('MockConnection', () => {
 
         injector = new di.Injector();
         backend = injector.get(Backend);
-    });
-
-
-    afterEach((done) => {
-        let pending = 0;
-        backend.pendingConnections.subscribe((c) => pending++);
-        done();
     });
 
 
@@ -71,7 +64,6 @@ fdescribe('MockConnection', () => {
                 }).
                 filter(r => r.type === 'error').
                 subscribe(r => count++);
-
 
             expect(count).toBe(1);
         });

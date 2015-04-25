@@ -88,6 +88,10 @@ export class Backend {
 
     }
 
+    resolveAllConnections() {
+        this.connections.subscribe((c) => c.readyState = 4);
+    }
+
     createConnection (req: Request) {
         if (!req || !(req instanceof Request)) {
             throw new Error(`createConnection requires an instance of Request, got ${req}`);
