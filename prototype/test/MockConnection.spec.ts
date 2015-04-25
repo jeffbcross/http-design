@@ -1,8 +1,6 @@
 /// <reference path="../node_modules/rx/ts/rx.all.d.ts" />
 /// <reference path="shared-declarations.d.ts" />
-
-declare var fdescribe;
-declare var xdescribe;
+/// /// <reference path="../jasmine.d.ts" />
 
 import {Http} from '../public/http';
 import {Connection, Backend} from '../public/MockConnection';

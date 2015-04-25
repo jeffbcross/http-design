@@ -1,11 +1,1 @@
-declare var describe;
-declare var it;
-declare var expect;
-declare var beforeEach;
-declare var afterEach;
-declare var fit;
-declare var fdescribe;
-declare var xit;
-declare var xdescribe;
-declare var jasmine;
 declare var require;
