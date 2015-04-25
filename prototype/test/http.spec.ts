@@ -173,9 +173,10 @@ describe('Http', () => {
     });
 
 
-    xdescribe('retry', () => {
+    describe('retry', () => {
         it('should try the connection specified number of times on errors', () => {
             let url = 'http://flaky.url';
+            let count = 0;
             let successSpy = jasmine.createSpy('success');
             let errorSpy = jasmine.createSpy('error');
             let response = new Response({reponseText: 'finally!'})
@@ -183,12 +184,16 @@ describe('Http', () => {
             http(url).
                 retry(2).
                 subscribe(successSpy, errorSpy, completeSpy);
-            let connections = backend.getConnectionsByUrl(url);
-            expect(connections.length).toBe(1);
-            let connection = connections.pop();
-            connection.mockError();
-            connection = connections.pop();
-            connection.mockRespond(response);
+            backend.connections.subscribe(c => {
+                if (count === 0) {
+                    count++;
+                    c.mockError();
+                } else {
+                    c.mockRespond(response);
+                }
+
+            });
+
             expect(errorSpy.calls.count()).toBe(0);
             expect(successSpy.calls.count()).toBe(1);
             expect(completeSpy).toHaveBeenCalled();
@@ -196,12 +201,6 @@ describe('Http', () => {
 
 
         it('should retry intelligently when provided a function', () => {});
-    });
-
-
-    xdescribe('abort', () => {
-        it('should call cancel on the connection', () => {
-        })
     });
 
 
