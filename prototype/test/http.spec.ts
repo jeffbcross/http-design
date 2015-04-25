@@ -90,7 +90,7 @@ describe('Http', () => {
 
             expect(() => {
                 connection.mockRespond(new Response({}));
-            }).toThrow(new Error('Connection has already been responded to'));
+            }).toThrow(new Error('Connection has already been resolved'));
             expect(nextSpy).not.toHaveBeenCalled();
         });
     });

@@ -64,7 +64,7 @@ export class Connection {
      **/
     mockRespond(res: Response) {
         if (this.readyState >= ReadyStates.DONE) {
-            throw new Error('Connection has already been responded to');
+            throw new Error('Connection has already been resolved');
         }
         this.readyState = ReadyStates.DONE;
         this.response.onNext(res);
