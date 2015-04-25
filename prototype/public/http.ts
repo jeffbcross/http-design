@@ -4,7 +4,7 @@ declare var require;
 import {BaseConnectionConfig, ConnectionConfig} from './BaseConnectionConfig';
 import {IConnectionConfig} from './IConnection';
 import {Methods} from './Methods';
-import {Backend, ConnectionFactory} from './MockConnection';
+import {Backend} from './MockConnection';
 import {ReadyStates} from './ReadyStates';
 import {Request} from './Request';
 import {Response} from './Response';

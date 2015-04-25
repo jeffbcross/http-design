@@ -14,14 +14,6 @@ var di = require('di');
  * The mock implementation contains helper methods to respond to connections within tests.
  * API subject to change and expand.
  **/
-export function ConnectionFactory (backend) {
-    return function () {
-        let connection = new Connection(backend);
-        backend.connections.push(connection);
-        return connection;
-    }
-}
-
 export class Connection {
     /**
      * Observer to call on download progress, if provided in config.
@@ -55,8 +47,6 @@ export class Connection {
         if (this.readyState !== ReadyStates.DONE) {
             this.readyState = ReadyStates.CANCELLED;
         }
-
-
     }
 
     /**
@@ -115,5 +105,3 @@ export class Backend {
         return connection;
     }
 }
-
-di.annotate(ConnectionFactory, new di.Inject(Backend));
