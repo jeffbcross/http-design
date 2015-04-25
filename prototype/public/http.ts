@@ -38,6 +38,7 @@ export function Http (backend) {
             let connection = backend.createConnection(request);
 
             connection.send().subscribe(observer);
+            return connection.dispose;
         });
     }
 }

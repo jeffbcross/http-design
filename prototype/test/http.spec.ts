@@ -8,6 +8,7 @@ import {BaseConnectionConfig, ConnectionConfig} from '../public/BaseConnectionCo
 import {Methods} from '../public/Methods';
 import {Response} from '../public/Response';
 import {Request} from '../public/Request';
+import {ReadyStates} from '../public/ReadyStates';
 
 var VirtualTimeScheduler = require('../node_modules/rx/dist/rx.virtualtime.js');
 var Rx = require('../node_modules/rx/dist/rx.testing.js');
@@ -27,9 +28,7 @@ describe('Http', () => {
     });
 
     afterEach(() => {
-        let pending = 0;
-        backend.pendingConnections.subscribe((c) => pending++);
-        expect(pending).toBe(0);
+        backend.verifyNoPendingRequests();
     });
 
     it('should perform a get request for given url if only passed a string', () => {
@@ -50,6 +49,7 @@ describe('Http', () => {
         let config = new ConnectionConfig(Methods.GET, url);
         let text;
         let connection;
+
         http(config).subscribe((res: Response) => {
             text = res.responseText;
         });
@@ -73,6 +73,26 @@ describe('Http', () => {
         backend.connections.subscribe((c) => connection = c);
         connection.mockRespond(baseResponse);
         expect(text).toBe('base response');
+    });
+
+    describe('.dispose()', () => {
+        it('should abort the connection if disposed', () => {
+            let url = 'http://kill.me';
+            let count = 0;
+            let connection;
+            let nextSpy = jasmine.createSpy('next');
+            http(url).subscribe(nextSpy).dispose();
+            backend.connections.
+                do(c => connection = c).
+                filter((c) => c.readyState === ReadyStates.CANCELLED).
+                subscribe(c => count++);
+            expect(count).toBe(1);
+
+            expect(() => {
+                connection.mockRespond(new Response({}));
+            }).toThrow(new Error('Connection has already been responded to'));
+            expect(nextSpy).not.toHaveBeenCalled();
+        });
     });
 
 

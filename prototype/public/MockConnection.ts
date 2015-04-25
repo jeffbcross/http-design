@@ -44,16 +44,28 @@ export class Connection {
         this.response = new Rx.ReplaySubject<Response>();
         this.readyState = ReadyStates.OPEN;
         this.request = req;
+        this.dispose = this.dispose.bind(this);
     }
 
     send(): Rx.ReplaySubject<Response> {
         return this.response;
     }
 
+    dispose() {
+        if (this.readyState !== ReadyStates.DONE) {
+            this.readyState = ReadyStates.CANCELLED;
+        }
+
+
+    }
+
     /**
      * Called after a connection has been established.
      **/
     mockRespond(res: Response) {
+        if (this.readyState >= ReadyStates.DONE) {
+            throw new Error('Connection has already been responded to');
+        }
         this.readyState = ReadyStates.DONE;
         this.response.onNext(res);
         this.response.onCompleted();
@@ -81,11 +93,13 @@ export class Backend {
     pendingConnections: Rx.Observable<Connection>;
     constructor() {
         this.connections = new Rx.ReplaySubject<Connection>();
-        this.pendingConnections = this.connections.filter((c) => c.readyState !== 4)
+        this.pendingConnections = this.connections.filter((c) => c.readyState < ReadyStates.DONE);
     }
 
     verifyNoPendingRequests() {
-
+        let pending = 0;
+        this.pendingConnections.subscribe((c) => pending++);
+        if (pending > 0) throw new Error(`${pending} pending connections to be resolved`);
     }
 
     resolveAllConnections() {
