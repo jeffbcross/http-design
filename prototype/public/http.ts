@@ -32,16 +32,13 @@ export function Http (backend) {
             configMap = Immutable.fromJS(config);
         }
         configMap = BaseConnectionConfig.merge(configMap);
-
         return Rx.Observable.create((observer) => {
             let request = new Request(configMap);
             let connection = backend.createConnection(request);
-
             connection.send().subscribe(observer);
             return connection.dispose;
         });
     }
 }
-
 
 di.annotate(Http, new di.Inject(Backend));
