@@ -3,7 +3,7 @@
 /// <reference path="../jasmine.d.ts" />
 
 import {Http} from '../public/http';
-import {Backend} from '../public/MockConnection';
+import {Backend, Connection} from '../public/MockConnection';
 import {BaseConnectionConfig, ConnectionConfig} from '../public/BaseConnectionConfig';
 import {Methods} from '../public/Methods';
 import {Response} from '../public/Response';
@@ -152,23 +152,24 @@ describe('Http', () => {
     });
 
 
-    xdescribe('interval', () => {
-        it('should create new connection at specified interval', () => {
+    describe('interval', () => {
+        it('should create new connection at specified interval', (done) => {
+            //TODO: Use testscheduler
             let url = 'http://repeatable';
-            let nextSpy = jasmine.createSpy('next');
-            let count = -1;
-            let responses = [new Response({}), new Response({})];
-            let testScheduler = new Rx.TestScheduler(VirtualTimeScheduler);
-            let onNext = Rx.ReactiveTest.onNext;
+            let count = 0;
 
-            testScheduler.startWithTiming(() => {
-                return Rx.Observable.interval(250, testScheduler).
-                    map(() => {
-                        return url;
-                    }).flatMap(http);
-            }, 0, 0, 760);
-            let connections = backend.getConnectionsByUrl(url);
-            expect(connections.length).toBe(3);
+            backend.connections.subscribe(() => count++);
+
+            let subscription = Rx.Observable.interval(250).
+                map(() => url).
+                do((res) => {
+                    if (count >= 3) {
+                        subscription.dispose();
+                        done();
+                    }
+                }).
+                flatMap(http).
+                subscribe();
         });
     });
 
