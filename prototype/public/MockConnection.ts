@@ -80,9 +80,12 @@ export class Connection {
 
 export class Backend {
     connections: Rx.ReplaySubject<Connection>;
+    connectionsArray: Array<Connection>;
     pendingConnections: Rx.Observable<Connection>;
     constructor() {
+        this.connectionsArray = [];
         this.connections = new Rx.ReplaySubject<Connection>();
+        this.connections.subscribe(connection => this.connectionsArray.push(connection));
         this.pendingConnections = this.connections.filter((c) => c.readyState < ReadyStates.DONE);
     }
 

@@ -1,6 +1,6 @@
 /// <reference path="../node_modules/rx/ts/rx.all.d.ts" />
 /// <reference path="shared-declarations.d.ts" />
-/// /// <reference path="../jasmine.d.ts" />
+/// <reference path="../jasmine.d.ts" />
 
 import {Http} from '../public/http';
 import {Connection, Backend} from '../public/MockConnection';
@@ -64,6 +64,16 @@ describe('MockConnection', () => {
                 subscribe(r => count++);
 
             expect(count).toBe(1);
+        });
+
+
+        it('should be possible to get a plain old array of connections', () => {
+            expect(backend.connectionsArray.length).toBe(0);
+            backend.createConnection(req);
+            expect(backend.connectionsArray.length).toBe(1);
+            backend.createConnection(req);
+            expect(backend.connectionsArray.length).toBe(2);
+            expect(backend.connectionsArray[1].request).toBe(req);
         });
     });
 
