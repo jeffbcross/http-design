@@ -201,7 +201,40 @@ describe('Http', () => {
         });
 
 
-        it('should retry intelligently when provided a function', () => {});
+        it('should retry intelligently when provided a function', () => {
+            let url = 'http://flaky.url';
+            let count = 0;
+            let connection:Connection;
+            let successSpy = jasmine.createSpy('success');
+            let errorSpy = jasmine.createSpy('error');
+            let response = new Response({reponseText: 'finally!'})
+            let completeSpy = jasmine.createSpy('complete');
+            http(url).
+              retryWhen(function(errors) {
+                return errors.map(e => {
+                  if (e.statusCode > 400 && e.statusCode < 500) {
+                    return e;
+                  } else {
+                    throw e;
+                  }
+                });
+              }).
+                subscribe(successSpy, errorSpy, completeSpy);
+            backend.connections.subscribe(c => {
+                console.log('new connection', c);
+                connection = c;
+            });
+
+            connection.mockError(new Response({statusCode: 404}));
+            expect(successSpy).not.toHaveBeenCalled();
+            expect(errorSpy).not.toHaveBeenCalled();
+
+            connection.mockError(new Response({statusCode: 500}));
+            expect(successSpy).not.toHaveBeenCalled();
+            expect(errorSpy).toHaveBeenCalled();
+
+            backend.resolveAllConnections();
+        });
     });
 
 
