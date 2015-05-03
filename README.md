@@ -221,8 +221,7 @@ does not contain necessary values to execute a request.
 
 #### `Observable` Interface
 
-This will be a minimal subset of the RxJS [`Observable` interface](https://github.com/bor
-isyankov/DefinitelyTyped/blob/8fea426543e19e19db32eb827a02d11bdab30383/rx/rx-lite.d.ts#L217).
+This will be a minimal subset of the RxJS [`Observable` interface](https://github.com/borisyankov/DefinitelyTyped/blob/8fea426543e19e19db32eb827a02d11bdab30383/rx/rx-lite.d.ts#L217).
 Connections should all be able to upgrade to a compatible `Observable` interface if provided via
 injection into the `Connection` class. This would be accomplished by binding the compatible
 `Observable` class to the `Observable` token provided by the Http library prior to the `Connection`
